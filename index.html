@@ -356,9 +356,11 @@ body {
   // per minute each speech language typically carries relative to English. Sources: README.
   var SCENARIOS = ['presentation', 'conversation', 'recording', 'teaching', 'reading', 'custom'];
   var SCENARIO_BASE = {
-    presentation: [130, 150], conversation: [140, 170], recording: [140, 160], teaching: [110, 130], reading: [150, 160]
+    presentation: [140, 170], conversation: [150, 190], recording: [150, 180], teaching: [120, 150], reading: [140, 170]
   };
-  var LANG_FACTOR = { 'en-US': 1, 'zh-CN': 1, 'hi-IN': 1, 'es-ES': 1, 'ar-SA': 1, 'de-DE': 1 };
+  // Read-aloud rates relative to English (IReST 2012 and Brysbaert 2019 averaged; Chinese in
+  // dictionary words, cross-checked with conversational data). Hindi rests on one older study.
+  var LANG_FACTOR = { 'en-US': 1, 'zh-CN': 0.72, 'hi-IN': 1, 'es-ES': 0.98, 'ar-SA': 0.68, 'de-DE': 0.84 };
 
   var DEFAULTS = { ui: 'en', lang: 'en-US', scenario: 'presentation', min: 130, max: 150, windowSec: 15, pauseSec: 1.5, includePauses: false, beep: false };
   var MARGIN = 10;            // width of each yellow band in WPM
