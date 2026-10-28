@@ -12,7 +12,7 @@ context.globalThis = context;
 vm.runInNewContext(match[1], context);
 const Core = context.WPTCore;
 
-const base = { min: 130, max: 150, windowSec: 15, pauseSec: 1.5 };
+const base = { scenario: 'custom', min: 130, max: 150, windowSec: 15, pauseSec: 1.5 };
 
 // Speak at `wpm` (wpm 0 = silence) from `from` to `to`, interleaving word events with
 // 500 ms ticks as the app does. Returns the last snapshot and the number of alarms.
@@ -28,11 +28,20 @@ function stream(tracker, from, to, wpm) {
   return { snap, alarms };
 }
 
-test('countWords splits on whitespace and ignores padding', () => {
+test('countWords counts words, not punctuation or whitespace', () => {
   assert.equal(Core.countWords(''), 0);
   assert.equal(Core.countWords('   '), 0);
   assert.equal(Core.countWords(' Hallo  Welt\nwie geht es '), 5);
+  assert.equal(Core.countWords("Don't stop — it's 2026, really!", 'en-US'), 5);
   assert.equal(Core.countWords(undefined), 0);
+});
+
+test('countWords segments languages without spaces', () => {
+  // ICU splits this into 我|今天|想|给|大家|介绍|一下|我们|的|新|产品.
+  assert.equal(Core.countWords('我今天想给大家介绍一下我们的新产品。', 'zh-CN'), 11);
+  assert.equal(Core.countWords('मैं आज आपको हमारे नए उत्पाद के बारे में बताना चाहता हूँ।', 'hi-IN'), 12);
+  assert.equal(Core.countWords('أريد اليوم أن أقدّم لكم منتجنا الجديد.', 'ar-SA'), 7);
+  assert.equal(Core.countWords('Quiero presentaros hoy nuestro nuevo producto.', 'es-ES'), 6);
 });
 
 test('ingestTotal counts growth only and survives corrections and restarts', () => {
@@ -136,19 +145,79 @@ test('alarm fires once after more than 5 s in red and re-arms after leaving red'
 });
 
 test('settings round-trip through the URL fragment and are clamped', () => {
-  const s = Core.parseHash('#min=120&max=160&w=20&p=2&lang=en-US&pauses=1&beep=1');
-  assert.deepEqual({ ...s }, { min: 120, max: 160, windowSec: 20, pauseSec: 2, lang: 'en-US', includePauses: true, beep: true });
-  assert.equal(Core.serializeHash(s), 'min=120&max=160&w=20&p=2&lang=en-US&pauses=1&beep=1');
+  const s = Core.parseHash('#ui=de&lang=en-US&sc=custom&min=120&max=160&w=20&p=2&pauses=1&beep=1');
+  assert.deepEqual({ ...s }, { ui: 'de', lang: 'en-US', scenario: 'custom', min: 120, max: 160, windowSec: 20, pauseSec: 2, includePauses: true, beep: true });
+  assert.equal(Core.serializeHash(s), 'ui=de&lang=en-US&sc=custom&min=120&max=160&w=20&p=2&pauses=1&beep=1');
 
   const d = Core.parseHash('');
-  assert.deepEqual({ ...d }, { ...Core.DEFAULTS });
+  const preset = Core.corridorFor(Core.DEFAULTS.scenario, Core.DEFAULTS.lang);
+  assert.deepEqual({ ...d }, { ...Core.DEFAULTS, min: preset.min, max: preset.max });
 
-  const bad = Core.parseHash('#min=abc&max=100&w=99&p=0.1&lang=fr-FR');
+  const bad = Core.parseHash('#sc=custom&min=abc&max=100&w=99&p=0.1&lang=fr-FR&ui=fr');
   assert.equal(bad.min, 130);
   assert.equal(bad.max, 150, 'max at or below min moves to min + 20');
   assert.equal(bad.windowSec, 30);
   assert.equal(bad.pauseSec, 0.8);
-  assert.equal(bad.lang, 'de-DE');
+  assert.equal(bad.lang, 'en-US');
+  assert.equal(bad.ui, 'en');
+  assert.equal(Core.parseHash('#sc=nonsense').scenario, Core.DEFAULTS.scenario);
+});
+
+test('a preset scenario sets the corridor from the speech language; custom keeps typed values', () => {
+  for (const lang of Core.SPEECH_LANGS) {
+    for (const sc of Core.SCENARIOS.filter((x) => x !== 'custom')) {
+      const c = Core.corridorFor(sc, lang);
+      assert.ok(c.min > 0 && c.max > c.min, `${sc} ${lang}: ${c.min}-${c.max}`);
+      assert.equal(c.min % 5, 0);
+      const s = Core.parseHash(`#lang=${lang}&sc=${sc}&min=999&max=1`);
+      assert.equal(s.min, c.min, 'preset ignores typed min');
+      assert.equal(s.max, c.max, 'preset ignores typed max');
+    }
+  }
+  assert.deepEqual({ ...Core.corridorFor('presentation', 'en-US') },
+    { min: Core.SCENARIO_BASE.presentation[0], max: Core.SCENARIO_BASE.presentation[1] }, 'English is the reference');
+  assert.equal(Core.corridorFor('custom', 'en-US'), null);
+  const custom = Core.parseHash('#sc=custom&min=100&max=125');
+  assert.equal(custom.min, 100);
+  assert.equal(custom.max, 125);
+});
+
+test('the gauge scale frames the corridor', () => {
+  assert.deepEqual({ ...Core.scaleFor(130, 150) }, { from: 80, to: 220 });
+  assert.deepEqual({ ...Core.scaleFor(45, 60) }, { from: 0, to: 130 });
+  const sc = Core.scaleFor(130, 150);
+  assert.equal(Core.scalePercent(80, sc), 0);
+  assert.equal(Core.scalePercent(150, sc), 50);
+  assert.equal(Core.scalePercent(500, sc), 100);
+});
+
+test('interface language follows the browser, with English as fallback', () => {
+  assert.equal(Core.pickUiLang(['fr-FR', 'de-AT', 'en']), 'de');
+  assert.equal(Core.pickUiLang(['zh-TW']), 'zh');
+  assert.equal(Core.pickUiLang(['fr-FR']), 'en');
+  assert.equal(Core.pickUiLang([]), 'en');
+  const d = Core.defaultsFor(['es-MX']);
+  assert.equal(d.ui, 'es');
+  assert.equal(d.lang, 'es-ES');
+  assert.equal(Core.parseHash('', d).ui, 'es');
+  assert.equal(Core.isRtl('ar'), true);
+  assert.equal(Core.isRtl('de'), false);
+});
+
+test('every interface language translates every string', () => {
+  const keys = Object.keys(Core.STRINGS.en).sort();
+  const placeholders = (s) => (s.match(/\{\w+\}/g) || []).sort().join();
+  for (const ui of Core.UI_LANGS) {
+    const table = Core.STRINGS[ui];
+    assert.ok(table, `missing table ${ui}`);
+    assert.deepEqual(Object.keys(table).sort(), keys, `keys differ for ${ui}`);
+    for (const k of keys) assert.equal(placeholders(table[k]), placeholders(Core.STRINGS.en[k]), `${ui}.${k} placeholders`);
+    assert.ok(Core.LANG_NAMES[ui], `language name ${ui}`);
+  }
+  assert.equal(Core.t('de', 'errRepeated', { n: 5, code: 'network' }),
+    'Die Spracherkennung ist 5-mal in Folge fehlgeschlagen (network). Prüfe die Netzwerkverbindung und starte erneut.');
+  assert.equal(Core.t('xx', 'start'), 'Start', 'unknown language falls back to English');
+  assert.equal(Core.t('de', 'noSuchKey'), 'noSuchKey');
 });
 
 test('demo source ramps from 100 to 200 WPM over 60 s', () => {

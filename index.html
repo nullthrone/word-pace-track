@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="de" data-theme="light">
+<html lang="en" dir="ltr" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Live-Sprechtempo in Wörtern pro Minute. Läuft im Browser, speichert weder Audio noch Text.">
+<meta name="description" content="Live speaking pace in words per minute. Runs in the browser, stores neither audio nor text.">
 <title>Word Pace · Nullthrone</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 274 266'%3E%3Cg fill='%23141317'%3E%3Cpath d='M81,0 H193 V17 H81 Z'/%3E%3Cpath fill-rule='evenodd' d='M61,21 H213 V266 H61 Z M92,97 A45,45 0 0 1 182,97 V199 A45,45 0 0 1 92,199 Z'/%3E%3Cpath d='M39,62 L56,50 V266 H39 Z'/%3E%3Cpath d='M235,62 L218,50 V266 H235 Z'/%3E%3Cpath d='M17,106 L34,94 V266 H17 Z'/%3E%3Cpath d='M257,106 L240,94 V266 H257 Z'/%3E%3Cpath d='M0,257 H56 V266 H0 Z'/%3E%3Cpath d='M218,257 H274 V266 H218 Z'/%3E%3C/g%3E%3C/svg%3E">
 <script>
@@ -41,7 +41,8 @@
   --line: 1px solid var(--border-line);
   --line-strong: 1px solid var(--border-strong);
 
-  /* No external fonts (CSP): the brand faces first, then their closest system relatives. */
+  /* No external fonts (CSP): the brand faces first, then their closest system relatives.
+     Scripts the brand faces lack (Arabic, Devanagari, Han) fall back to the system font per glyph. */
   --font-display: "Jost", "Futura", "Avenir Next", "Century Gothic", system-ui, sans-serif;
   --font-body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -85,6 +86,9 @@ body {
   font-family: var(--font-display); font-weight: 500; line-height: var(--leading-tight);
   letter-spacing: var(--track-caps); text-transform: uppercase;
 }
+/* Tracking tears Arabic joins and Devanagari clusters apart, and these scripts have no case.
+   Small labels get a readable size instead. */
+.caps:lang(ar), .caps:lang(hi), .caps:lang(zh) { letter-spacing: 0; text-transform: none; font-size: 13px; }
 
 .page { max-width: 560px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-7); }
 
@@ -114,7 +118,7 @@ body {
 .readout-value { display: flex; align-items: baseline; justify-content: center; gap: var(--space-2); }
 .wpm {
   font-family: var(--font-display); font-weight: 500; font-size: 112px; line-height: 1;
-  font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; color: var(--text-body);
+  font-variant-numeric: tabular-nums; min-width: 3ch; text-align: end; color: var(--text-body);
   transition: color var(--dur-med) var(--ease);
 }
 .readout[data-tone="ok"] .wpm { color: var(--ok); }
@@ -169,15 +173,15 @@ body {
 }
 .input:focus { border-color: var(--ink-950); box-shadow: var(--focus-ring); }
 .select-wrap { position: relative; }
-.select-wrap select { appearance: none; -webkit-appearance: none; padding-right: 32px; font-family: var(--font-body); }
+.select-wrap select { appearance: none; -webkit-appearance: none; padding-inline-end: 32px; font-family: var(--font-body); }
 .select-wrap::after {
-  content: ""; position: absolute; right: 14px; top: 50%; width: 6px; height: 6px; margin-top: -5px;
+  content: ""; position: absolute; inset-inline-end: 14px; top: 50%; width: 6px; height: 6px; margin-top: -5px;
   border-right: 1.5px solid var(--ink-950); border-bottom: 1.5px solid var(--ink-950); transform: rotate(45deg); pointer-events: none;
 }
 .switches { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-4); }
 .switch {
   display: inline-flex; align-items: center; gap: 10px; min-height: var(--control-h-md); padding: 0;
-  background: none; border: 0; color: var(--text-body); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--text-body); font: inherit; font-size: 14px; text-align: start; cursor: pointer;
 }
 .switch:focus-visible { box-shadow: none; }
 .switch:focus-visible .switch-track { box-shadow: var(--focus-ring); }
@@ -185,6 +189,7 @@ body {
 .switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--ink-950); transition: left var(--dur-med) var(--ease), background-color var(--dur-med) var(--ease); }
 .switch[aria-checked="true"] .switch-track { background: var(--ink-950); }
 .switch[aria-checked="true"] .switch-thumb { left: 18px; background: var(--paper); }
+[dir="rtl"] .switch-track { transform: scaleX(-1); }
 .hint { margin: var(--space-3) 0 0; font-size: 13px; color: var(--text-muted); }
 
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-4); margin: 0; border-top: var(--line); }
@@ -243,9 +248,9 @@ body {
           <path transform="translate(274,0) scale(-1,1)" d="M0,257 H56 V266 H0 Z"/>
         </g>
       </svg>
-      <span class="brand-name caps">Nullthrone</span>
+      <span class="brand-name caps" lang="en">Nullthrone</span>
     </div>
-    <p class="eyebrow caps">Word Pace · Live</p>
+    <p class="eyebrow caps" lang="en">Word Pace · Live</p>
   </header>
   <div class="double-rule" aria-hidden="true"></div>
 
@@ -254,14 +259,14 @@ body {
   <main>
     <section class="card" aria-labelledby="readout-title">
       <div class="card-head">
-        <h1 id="readout-title" class="eyebrow caps">Sprechtempo</h1>
-        <span id="pause-badge" class="badge badge-warn caps" hidden>Pause</span>
+        <h1 id="readout-title" class="eyebrow caps" data-i18n="readoutTitle">Speaking pace</h1>
+        <span id="pause-badge" class="badge badge-warn caps" data-i18n="pause" hidden>Pause</span>
       </div>
       <div id="readout" class="readout" data-tone="idle">
-        <div class="readout-value"><span id="wpm" class="wpm">–</span><span class="wpm-unit caps">WPM</span></div>
-        <p id="zone-label" class="zone-label caps" aria-live="polite">Bereit</p>
+        <div class="readout-value"><span id="wpm" class="wpm">–</span><span class="wpm-unit caps" lang="en">WPM</span></div>
+        <p id="zone-label" class="zone-label caps" aria-live="polite">Ready</p>
       </div>
-      <div class="gauge" aria-hidden="true">
+      <div class="gauge" dir="ltr" aria-hidden="true">
         <div class="gauge-track">
           <div id="band-slow" class="band band-danger"></div>
           <div id="band-edge-slow" class="band band-warn"></div>
@@ -272,7 +277,7 @@ body {
         </div>
         <div id="gauge-scale" class="gauge-scale"></div>
       </div>
-      <p class="status"><span id="status-dot" class="dot"></span><span id="status-text">Bereit. Start fragt nach der Mikrofonfreigabe.</span></p>
+      <p class="status"><span id="status-dot" class="dot"></span><span id="status-text"></span></p>
       <div class="actions">
         <button id="start" class="btn btn-primary btn-lg caps" type="button">Start</button>
         <button id="popout" class="btn btn-outline btn-lg caps" type="button">Pop-out</button>
@@ -280,68 +285,335 @@ body {
     </section>
 
     <section id="stats" class="card" aria-labelledby="stats-title" hidden>
-      <p class="eyebrow caps">Letzte Sitzung</p>
-      <h2 id="stats-title" class="card-title">Auswertung</h2>
+      <p class="eyebrow caps" data-i18n="statsEyebrow">Last session</p>
+      <h2 id="stats-title" class="card-title" data-i18n="statsTitle">Summary</h2>
       <dl class="stats-grid">
-        <div><dt class="caps">Dauer</dt><dd id="st-duration">–</dd></div>
-        <div><dt class="caps">Spitze</dt><dd id="st-peak">–</dd></div>
-        <div><dt class="caps">Ø Sprechzeit</dt><dd id="st-avg">–</dd></div>
-        <div><dt class="caps">Ø Gesamtdauer</dt><dd id="st-avg-total">–</dd></div>
+        <div><dt class="caps" data-i18n="duration">Duration</dt><dd id="st-duration">–</dd></div>
+        <div><dt class="caps" data-i18n="peak">Peak</dt><dd id="st-peak">–</dd></div>
+        <div><dt class="caps" data-i18n="avgSpeech">Avg · speaking time</dt><dd id="st-avg">–</dd></div>
+        <div><dt class="caps" data-i18n="avgTotal">Avg · total time</dt><dd id="st-avg-total">–</dd></div>
       </dl>
       <div class="split" aria-hidden="true">
         <span id="split-ok" class="tone-ok"></span><span id="split-warn" class="tone-warn"></span><span id="split-danger" class="tone-danger"></span>
       </div>
       <ul class="legend">
-        <li><span class="dot tone-ok"></span><span id="lg-ok">Im Korridor –</span></li>
-        <li><span class="dot tone-warn"></span><span id="lg-warn">Grenzbereich –</span></li>
-        <li><span class="dot tone-danger"></span><span id="lg-danger">Außerhalb –</span></li>
+        <li><span class="dot tone-ok"></span><span data-i18n="inRange">In range</span> <span id="lg-ok">–</span></li>
+        <li><span class="dot tone-warn"></span><span data-i18n="borderline">Borderline</span> <span id="lg-warn">–</span></li>
+        <li><span class="dot tone-danger"></span><span data-i18n="outside">Outside</span> <span id="lg-danger">–</span></li>
       </ul>
     </section>
 
     <section class="card" aria-labelledby="settings-title">
-      <h2 id="settings-title" class="card-title">Einstellungen</h2>
+      <h2 id="settings-title" class="card-title" data-i18n="settingsTitle">Settings</h2>
       <div class="field-grid">
-        <label class="field"><span class="field-label caps">Korridor min · WPM</span><input id="set-min" class="input" type="number" inputmode="numeric" min="60" max="250" step="5"></label>
-        <label class="field"><span class="field-label caps">Korridor max · WPM</span><input id="set-max" class="input" type="number" inputmode="numeric" min="70" max="300" step="5"></label>
-        <label class="field"><span class="field-label caps">Fenster · s</span><input id="set-w" class="input" type="number" inputmode="numeric" min="10" max="30" step="1"></label>
-        <label class="field"><span class="field-label caps">Pausenschwelle · s</span><input id="set-p" class="input" type="number" inputmode="decimal" min="0.8" max="3" step="0.1"></label>
-        <label class="field field-wide"><span class="field-label caps">Sprache</span>
-          <span class="select-wrap"><select id="set-lang" class="input">
-            <option value="de-DE">Deutsch (de-DE)</option>
-            <option value="en-US">English (en-US)</option>
-          </select></span>
+        <label class="field"><span class="field-label caps" data-i18n="uiLang">Interface</span>
+          <span class="select-wrap"><select id="set-ui" class="input"></select></span>
         </label>
+        <label class="field"><span class="field-label caps" data-i18n="speechLang">Speech language</span>
+          <span class="select-wrap"><select id="set-lang" class="input"></select></span>
+        </label>
+        <label class="field field-wide"><span class="field-label caps" data-i18n="scenario">Scenario</span>
+          <span class="select-wrap"><select id="set-scenario" class="input"></select></span>
+        </label>
+        <label class="field"><span class="field-label caps" data-i18n="rangeMin">Range min · WPM</span><input id="set-min" class="input" type="number" inputmode="numeric" min="40" max="250" step="5"></label>
+        <label class="field"><span class="field-label caps" data-i18n="rangeMax">Range max · WPM</span><input id="set-max" class="input" type="number" inputmode="numeric" min="50" max="300" step="5"></label>
+        <label class="field"><span class="field-label caps" data-i18n="window">Window · s</span><input id="set-w" class="input" type="number" inputmode="numeric" min="10" max="30" step="1"></label>
+        <label class="field"><span class="field-label caps" data-i18n="pauseThreshold">Pause threshold · s</span><input id="set-p" class="input" type="number" inputmode="decimal" min="0.8" max="3" step="0.1"></label>
       </div>
+      <p class="hint" data-i18n="rangeNote">Guide value for this scenario and speech language.</p>
       <div class="switches">
-        <button id="set-pauses" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span>Pausen einrechnen</span></button>
-        <button id="set-beep" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span>Signalton nach 5 s im roten Bereich</span></button>
+        <button id="set-pauses" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span data-i18n="includePauses">Count pauses</span></button>
+        <button id="set-beep" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span data-i18n="beep">Beep after 5 s in the red</span></button>
       </div>
-      <p class="hint">Die Einstellungen stehen in der Adresszeile hinter #. Als Lesezeichen sichern; das Gerät speichert nichts.</p>
+      <p class="hint" data-i18n="hint">Settings live in the address bar after #. Bookmark them; nothing is stored on the device.</p>
     </section>
   </main>
 
   <footer class="footer">
-    <p>Die Seite speichert weder Audio noch Transkript noch Wortlisten. Die Spracherkennung läuft über den Dienst des Browsers (Chrome: Google, Safari: Apple); was du sagst, verlässt damit dein Gerät. Vertrauliches übst du besser mit neutralem Text.</p>
-    <p class="footer-meta caps">Nullthrone · Open Source · MIT</p>
+    <p data-i18n="footerPrivacy">This page stores no audio, transcript or word lists.</p>
+    <p class="footer-meta caps" lang="en">Nullthrone · Open Source · MIT</p>
   </footer>
 </div>
 
 <script id="wpt-core">
-// Pure counting, window and settings logic. No DOM access: tests load this block on its own.
+// Pure counting, window, settings and translation logic. No DOM access: tests load this block on its own.
 (function (root) {
   'use strict';
 
-  var DEFAULTS = { min: 130, max: 150, windowSec: 15, pauseSec: 1.5, lang: 'de-DE', includePauses: false, beep: false };
-  var LANGS = ['de-DE', 'en-US'];
-  var SCALE = { from: 80, to: 220 };
+  // Interface languages, most speakers first, and the recognition locale each one defaults to.
+  var UI_LANGS = ['en', 'zh', 'hi', 'es', 'ar', 'de'];
+  var SPEECH_LANGS = ['en-US', 'zh-CN', 'hi-IN', 'es-ES', 'ar-SA', 'de-DE'];
+  var RTL = ['ar'];
+  var LANG_NAMES = {
+    en: 'English', zh: '中文', hi: 'हिन्दी', es: 'Español', ar: 'العربية', de: 'Deutsch'
+  };
+  var SPEECH_NAMES = {
+    'en-US': 'English (en-US)', 'zh-CN': '普通话 (zh-CN)', 'hi-IN': 'हिन्दी (hi-IN)',
+    'es-ES': 'Español (es-ES)', 'ar-SA': 'العربية (ar-SA)', 'de-DE': 'Deutsch (de-DE)'
+  };
+
+  // Recommended corridors: a reference range in English WPM per scenario, scaled by how many words
+  // per minute each speech language typically carries relative to English. Sources: README.
+  var SCENARIOS = ['presentation', 'conversation', 'recording', 'teaching', 'reading', 'custom'];
+  var SCENARIO_BASE = {
+    presentation: [130, 150], conversation: [140, 170], recording: [140, 160], teaching: [110, 130], reading: [150, 160]
+  };
+  var LANG_FACTOR = { 'en-US': 1, 'zh-CN': 1, 'hi-IN': 1, 'es-ES': 1, 'ar-SA': 1, 'de-DE': 1 };
+
+  var DEFAULTS = { ui: 'en', lang: 'en-US', scenario: 'presentation', min: 130, max: 150, windowSec: 15, pauseSec: 1.5, includePauses: false, beep: false };
   var MARGIN = 10;            // width of each yellow band in WPM
   var MIN_SPEECH_MS = 4000;   // below this much speech in the window the value is not updated
   var EMA_ALPHA = 0.3;
   var ALARM_MS = 5000;
 
-  function countWords(text) {
-    var t = String(text == null ? '' : text).trim();
-    return t ? t.split(/\s+/).length : 0;
+  var STRINGS = {
+    en: {
+      scenario: "Scenario", scPresentation: "Presentation", scConversation: "Conversation", scRecording: "Video / podcast",
+      scTeaching: "Teaching", scReading: "Reading aloud", scCustom: "Custom",
+      rangeNote: "Guide value for this scenario and speech language. Editing min or max switches to Custom.",
+      readoutTitle: "Speaking pace", pause: "Pause", idle: "Ready", waiting: "Waiting for speech", measuring: "Measuring",
+      zoneOk: "In range", zoneEdgeSlow: "Slightly slow", zoneEdgeFast: "Slightly fast", zoneSlow: "Too slow", zoneFast: "Too fast",
+      statusIdle: "Ready. Start asks for microphone access.", statusIdleDemo: "Ready. Demo mode, no microphone.",
+      statusBlocked: "Start is disabled.", statusDemo: "Demo · synthetic words, no microphone",
+      statusRestarting: "Recognition restarting", statusRequesting: "Requesting microphone",
+      statusWaiting: "Microphone on · waiting for speech", statusPaused: "Microphone on · pause",
+      statusHearing: "Microphone on · speech detected", statusRestarts: " · restarts: {n}",
+      start: "Start", stop: "Stop", popout: "Pop-out", popoutClose: "Close pop-out",
+      statsEyebrow: "Last session", statsTitle: "Summary", duration: "Duration", peak: "Peak",
+      avgSpeech: "Avg · speaking time", avgTotal: "Avg · total time",
+      inRange: "In range", borderline: "Borderline", outside: "Outside",
+      settingsTitle: "Settings", uiLang: "Interface", speechLang: "Speech language",
+      rangeMin: "Range min · WPM", rangeMax: "Range max · WPM", window: "Window · s", pauseThreshold: "Pause threshold · s",
+      includePauses: "Count pauses", beep: "Beep after 5 s in the red",
+      hint: "Settings live in the address bar after #. Bookmark them; nothing is stored on the device.",
+      footerPrivacy: "This page stores no audio, transcript or word lists. Speech recognition runs on your browser's service (Chrome: Google, Safari: Apple), so what you say leaves your device. Practise confidential content with neutral text.",
+      demoTitle: "Demo mode", demoText: "Synthetic ramp from 100 to 200 WPM over 60 s. No microphone, no speech recognition.",
+      unsupportedTitle: "Not supported", unsupportedText: "This browser has no speech recognition (Web Speech API). Open the page in Chrome or Safari.",
+      insecureTitle: "Microphone blocked", insecureText: "The page is not loaded over HTTPS or localhost. Browsers only allow the microphone in secure contexts.",
+      sessionEnded: "Session ended",
+      popoutFailed: "The picture-in-picture window could not be opened: {msg}",
+      popoutBlocked: "The browser blocked the popup. Allow popups for this page and click again.",
+      errNotAllowed: "The microphone or speech recognition is blocked. Allow microphone access in the browser's site settings and start again.",
+      errAudioCapture: "No microphone available. Check the audio input; if another app holds the microphone exclusively, open the page on a second device.",
+      errLanguage: "Speech recognition does not support {lang} in this browser.",
+      errRepeated: "Speech recognition failed {n} times in a row ({code}). Check the network connection and start again.",
+      errStart: "Speech recognition could not start: {msg}"
+    },
+    zh: {
+      scenario: "场景", scPresentation: "演讲", scConversation: "对话", scRecording: "视频 / 播客",
+      scTeaching: "教学讲解", scReading: "朗读", scCustom: "自定义",
+      rangeNote: "根据场景和说话语言给出的参考值。修改下限或上限会切换为“自定义”。",
+      readoutTitle: "语速", pause: "停顿", idle: "就绪", waiting: "等待说话", measuring: "测量中",
+      zoneOk: "在目标范围内", zoneEdgeSlow: "略慢", zoneEdgeFast: "略快", zoneSlow: "太慢", zoneFast: "太快",
+      statusIdle: "就绪。点击“开始”后将请求麦克风权限。", statusIdleDemo: "就绪。演示模式，无需麦克风。",
+      statusBlocked: "无法开始。", statusDemo: "演示 · 模拟词语，无麦克风",
+      statusRestarting: "识别正在重启", statusRequesting: "正在请求麦克风",
+      statusWaiting: "麦克风已开启 · 等待说话", statusPaused: "麦克风已开启 · 停顿",
+      statusHearing: "麦克风已开启 · 检测到语音", statusRestarts: " · 重启次数：{n}",
+      start: "开始", stop: "停止", popout: "小窗", popoutClose: "关闭小窗",
+      statsEyebrow: "上次练习", statsTitle: "总结", duration: "时长", peak: "峰值",
+      avgSpeech: "平均 · 说话时间", avgTotal: "平均 · 总时长",
+      inRange: "在范围内", borderline: "临界", outside: "超出范围",
+      settingsTitle: "设置", uiLang: "界面语言", speechLang: "说话语言",
+      rangeMin: "范围下限 · WPM", rangeMax: "范围上限 · WPM", window: "窗口 · 秒", pauseThreshold: "停顿阈值 · 秒",
+      includePauses: "计入停顿", beep: "红色区域超过 5 秒时发出提示音",
+      hint: "设置保存在地址栏 # 之后。可将其添加为书签；设备上不保存任何内容。",
+      footerPrivacy: "本页面不保存音频、文字记录或词表。语音识别由浏览器的服务完成（Chrome：Google，Safari：Apple），因此你说的话会离开你的设备。涉及机密内容时，请用中性文本练习。",
+      demoTitle: "演示模式", demoText: "60 秒内从 100 升至 200 WPM 的模拟数据。不使用麦克风和语音识别。",
+      unsupportedTitle: "不支持", unsupportedText: "此浏览器不支持语音识别（Web Speech API）。请在 Chrome 或 Safari 中打开此页面。",
+      insecureTitle: "麦克风被阻止", insecureText: "页面未通过 HTTPS 或 localhost 加载。浏览器只在安全环境中允许使用麦克风。",
+      sessionEnded: "练习已结束",
+      popoutFailed: "无法打开画中画窗口：{msg}",
+      popoutBlocked: "浏览器拦截了弹出窗口。请允许此页面的弹出窗口，然后再次点击。",
+      errNotAllowed: "麦克风或语音识别被阻止。请在浏览器的网站设置中允许使用麦克风，然后重新开始。",
+      errAudioCapture: "没有可用的麦克风。请检查音频输入；如果其他应用独占了麦克风，请在另一台设备上打开此页面。",
+      errLanguage: "此浏览器的语音识别不支持 {lang}。",
+      errRepeated: "语音识别连续失败 {n} 次（{code}）。请检查网络连接后重新开始。",
+      errStart: "语音识别无法启动：{msg}"
+    },
+    hi: {
+      scenario: "स्थिति", scPresentation: "प्रस्तुति", scConversation: "बातचीत", scRecording: "वीडियो / पॉडकास्ट",
+      scTeaching: "पढ़ाना / समझाना", scReading: "ज़ोर से पढ़ना", scCustom: "अपने मान",
+      rangeNote: "यह स्थिति और बोलने की भाषा के लिए सुझाया गया मान है। न्यूनतम या अधिकतम बदलने पर “अपने मान” चुना जाएगा।",
+      readoutTitle: "बोलने की गति", pause: "विराम", idle: "तैयार", waiting: "बोलने की प्रतीक्षा", measuring: "माप रहे हैं",
+      zoneOk: "सीमा में", zoneEdgeSlow: "थोड़ा धीमा", zoneEdgeFast: "थोड़ा तेज़", zoneSlow: "बहुत धीमा", zoneFast: "बहुत तेज़",
+      statusIdle: "तैयार। शुरू करने पर माइक्रोफ़ोन की अनुमति माँगी जाएगी।", statusIdleDemo: "तैयार। डेमो मोड, माइक्रोफ़ोन नहीं।",
+      statusBlocked: "शुरू करना बंद है।", statusDemo: "डेमो · कृत्रिम शब्द, माइक्रोफ़ोन नहीं",
+      statusRestarting: "पहचान फिर से शुरू हो रही है", statusRequesting: "माइक्रोफ़ोन की अनुमति माँगी जा रही है",
+      statusWaiting: "माइक्रोफ़ोन चालू · बोलने की प्रतीक्षा", statusPaused: "माइक्रोफ़ोन चालू · विराम",
+      statusHearing: "माइक्रोफ़ोन चालू · आवाज़ पहचानी गई", statusRestarts: " · पुनःआरंभ: {n}",
+      start: "शुरू करें", stop: "रोकें", popout: "पॉप-आउट", popoutClose: "पॉप-आउट बंद करें",
+      statsEyebrow: "पिछला सत्र", statsTitle: "सारांश", duration: "अवधि", peak: "अधिकतम",
+      avgSpeech: "औसत · बोलने का समय", avgTotal: "औसत · कुल समय",
+      inRange: "सीमा में", borderline: "सीमा के पास", outside: "सीमा से बाहर",
+      settingsTitle: "सेटिंग्स", uiLang: "इंटरफ़ेस", speechLang: "बोलने की भाषा",
+      rangeMin: "न्यूनतम सीमा · WPM", rangeMax: "अधिकतम सीमा · WPM", window: "विंडो · सेकंड", pauseThreshold: "विराम सीमा · सेकंड",
+      includePauses: "विराम भी गिनें", beep: "लाल क्षेत्र में 5 सेकंड बाद बीप",
+      hint: "सेटिंग्स पता बार में # के बाद रहती हैं। इन्हें बुकमार्क करें; डिवाइस पर कुछ भी सेव नहीं होता।",
+      footerPrivacy: "यह पेज न ऑडियो, न ट्रांसक्रिप्ट और न ही शब्द-सूचियाँ सेव करता है। आवाज़ की पहचान ब्राउज़र की सेवा करती है (Chrome: Google, Safari: Apple), इसलिए आप जो बोलते हैं वह आपके डिवाइस से बाहर जाता है। गोपनीय सामग्री के लिए सामान्य पाठ से अभ्यास करें।",
+      demoTitle: "डेमो मोड", demoText: "60 सेकंड में 100 से 200 WPM तक कृत्रिम बढ़त। न माइक्रोफ़ोन, न आवाज़ की पहचान।",
+      unsupportedTitle: "समर्थित नहीं", unsupportedText: "इस ब्राउज़र में आवाज़ की पहचान (Web Speech API) नहीं है। पेज को Chrome या Safari में खोलें।",
+      insecureTitle: "माइक्रोफ़ोन अवरुद्ध", insecureText: "पेज HTTPS या localhost से लोड नहीं हुआ है। ब्राउज़र केवल सुरक्षित माहौल में माइक्रोफ़ोन की अनुमति देते हैं।",
+      sessionEnded: "सत्र समाप्त",
+      popoutFailed: "पिक्चर-इन-पिक्चर विंडो नहीं खुल सकी: {msg}",
+      popoutBlocked: "ब्राउज़र ने पॉप-अप रोक दिया। इस पेज के लिए पॉप-अप की अनुमति दें और फिर से क्लिक करें।",
+      errNotAllowed: "माइक्रोफ़ोन या आवाज़ की पहचान अवरुद्ध है। ब्राउज़र की साइट सेटिंग्स में माइक्रोफ़ोन की अनुमति दें और फिर से शुरू करें।",
+      errAudioCapture: "कोई माइक्रोफ़ोन उपलब्ध नहीं है। ऑडियो इनपुट जाँचें; अगर कोई दूसरा ऐप माइक्रोफ़ोन को पूरी तरह घेरे हुए है, तो पेज किसी दूसरे डिवाइस पर खोलें।",
+      errLanguage: "इस ब्राउज़र में आवाज़ की पहचान {lang} का समर्थन नहीं करती।",
+      errRepeated: "आवाज़ की पहचान लगातार {n} बार विफल रही ({code})। नेटवर्क कनेक्शन जाँचें और फिर से शुरू करें।",
+      errStart: "आवाज़ की पहचान शुरू नहीं हो सकी: {msg}"
+    },
+    es: {
+      scenario: "Escenario", scPresentation: "Presentación", scConversation: "Conversación", scRecording: "Vídeo / pódcast",
+      scTeaching: "Enseñanza", scReading: "Lectura en voz alta", scCustom: "Personalizado",
+      rangeNote: "Valor orientativo para el escenario y el idioma de habla. Si cambias el mínimo o el máximo, pasa a «Personalizado».",
+      readoutTitle: "Ritmo de habla", pause: "Pausa", idle: "Listo", waiting: "Esperando voz", measuring: "Midiendo",
+      zoneOk: "En el rango", zoneEdgeSlow: "Algo lento", zoneEdgeFast: "Algo rápido", zoneSlow: "Demasiado lento", zoneFast: "Demasiado rápido",
+      statusIdle: "Listo. Al iniciar se pedirá acceso al micrófono.", statusIdleDemo: "Listo. Modo demo, sin micrófono.",
+      statusBlocked: "Inicio desactivado.", statusDemo: "Demo · palabras sintéticas, sin micrófono",
+      statusRestarting: "Reiniciando el reconocimiento", statusRequesting: "Solicitando el micrófono",
+      statusWaiting: "Micrófono activo · esperando voz", statusPaused: "Micrófono activo · pausa",
+      statusHearing: "Micrófono activo · voz detectada", statusRestarts: " · reinicios: {n}",
+      start: "Iniciar", stop: "Detener", popout: "Ventana flotante", popoutClose: "Cerrar ventana",
+      statsEyebrow: "Última sesión", statsTitle: "Resumen", duration: "Duración", peak: "Máximo",
+      avgSpeech: "Media · tiempo de habla", avgTotal: "Media · tiempo total",
+      inRange: "En el rango", borderline: "Al límite", outside: "Fuera",
+      settingsTitle: "Ajustes", uiLang: "Interfaz", speechLang: "Idioma de habla",
+      rangeMin: "Rango mín. · WPM", rangeMax: "Rango máx. · WPM", window: "Ventana · s", pauseThreshold: "Umbral de pausa · s",
+      includePauses: "Contar pausas", beep: "Pitido tras 5 s en rojo",
+      hint: "Los ajustes están en la barra de direcciones, tras el #. Guárdalos como marcador; el dispositivo no almacena nada.",
+      footerPrivacy: "Esta página no guarda audio, transcripciones ni listas de palabras. El reconocimiento de voz lo hace el servicio del navegador (Chrome: Google, Safari: Apple), así que lo que dices sale de tu dispositivo. Para contenido confidencial, practica con un texto neutro.",
+      demoTitle: "Modo demo", demoText: "Rampa sintética de 100 a 200 WPM en 60 s. Sin micrófono ni reconocimiento de voz.",
+      unsupportedTitle: "No compatible", unsupportedText: "Este navegador no ofrece reconocimiento de voz (Web Speech API). Abre la página en Chrome o Safari.",
+      insecureTitle: "Micrófono bloqueado", insecureText: "La página no se ha cargado por HTTPS ni desde localhost. El navegador solo permite el micrófono en contextos seguros.",
+      sessionEnded: "Sesión terminada",
+      popoutFailed: "No se pudo abrir la ventana flotante: {msg}",
+      popoutBlocked: "El navegador bloqueó la ventana emergente. Permite las ventanas emergentes para esta página y vuelve a hacer clic.",
+      errNotAllowed: "El micrófono o el reconocimiento de voz están bloqueados. Permite el acceso al micrófono en los ajustes del sitio y vuelve a empezar.",
+      errAudioCapture: "No hay micrófono disponible. Revisa la entrada de audio; si otra aplicación usa el micrófono en exclusiva, abre la página en otro dispositivo.",
+      errLanguage: "El reconocimiento de voz de este navegador no admite {lang}.",
+      errRepeated: "El reconocimiento de voz falló {n} veces seguidas ({code}). Revisa la conexión de red y vuelve a empezar.",
+      errStart: "No se pudo iniciar el reconocimiento de voz: {msg}"
+    },
+    ar: {
+      scenario: "الموقف", scPresentation: "عرض تقديمي", scConversation: "محادثة", scRecording: "فيديو / بودكاست",
+      scTeaching: "تعليم وشرح", scReading: "قراءة بصوت عالٍ", scCustom: "قيم مخصّصة",
+      rangeNote: "قيمة إرشادية حسب الموقف ولغة الكلام. تعديل الحد الأدنى أو الأقصى ينقلك إلى «قيم مخصّصة».",
+      readoutTitle: "سرعة الكلام", pause: "توقف", idle: "جاهز", waiting: "بانتظار الكلام", measuring: "جارٍ القياس",
+      zoneOk: "ضمن النطاق", zoneEdgeSlow: "أبطأ قليلًا", zoneEdgeFast: "أسرع قليلًا", zoneSlow: "بطيء جدًا", zoneFast: "سريع جدًا",
+      statusIdle: "جاهز. عند البدء سيُطلب الإذن باستخدام الميكروفون.", statusIdleDemo: "جاهز. وضع العرض التوضيحي، بدون ميكروفون.",
+      statusBlocked: "البدء معطّل.", statusDemo: "عرض توضيحي · كلمات اصطناعية، بدون ميكروفون",
+      statusRestarting: "جارٍ إعادة تشغيل التعرّف", statusRequesting: "جارٍ طلب الميكروفون",
+      statusWaiting: "الميكروفون يعمل · بانتظار الكلام", statusPaused: "الميكروفون يعمل · توقف",
+      statusHearing: "الميكروفون يعمل · تم رصد الكلام", statusRestarts: " · مرات إعادة التشغيل: {n}",
+      start: "ابدأ", stop: "إيقاف", popout: "نافذة عائمة", popoutClose: "إغلاق النافذة العائمة",
+      statsEyebrow: "الجلسة الأخيرة", statsTitle: "الملخص", duration: "المدة", peak: "الذروة",
+      avgSpeech: "المتوسط · وقت الكلام", avgTotal: "المتوسط · المدة الكلية",
+      inRange: "ضمن النطاق", borderline: "على الحد", outside: "خارج النطاق",
+      settingsTitle: "الإعدادات", uiLang: "لغة الواجهة", speechLang: "لغة الكلام",
+      rangeMin: "الحد الأدنى · WPM", rangeMax: "الحد الأقصى · WPM", window: "النافذة · ث", pauseThreshold: "عتبة التوقف · ث",
+      includePauses: "احتساب فترات التوقف", beep: "تنبيه صوتي بعد 5 ث في المنطقة الحمراء",
+      hint: "تُحفظ الإعدادات في شريط العنوان بعد العلامة #. احفظها كإشارة مرجعية؛ لا يُخزَّن شيء على الجهاز.",
+      footerPrivacy: "لا تحفظ هذه الصفحة أي صوت أو نص مكتوب أو قوائم كلمات. يتم التعرّف على الكلام عبر خدمة المتصفح (Chrome: Google، Safari: Apple)، لذا يغادر ما تقوله جهازك. للتدرّب على محتوى سري استخدم نصًا محايدًا.",
+      demoTitle: "وضع العرض التوضيحي", demoText: "تصاعد اصطناعي من 100 إلى 200 كلمة في الدقيقة خلال 60 ثانية. بدون ميكروفون أو تعرّف على الكلام.",
+      unsupportedTitle: "غير مدعوم", unsupportedText: "هذا المتصفح لا يدعم التعرّف على الكلام (Web Speech API). افتح الصفحة في Chrome أو Safari.",
+      insecureTitle: "الميكروفون محظور", insecureText: "لم تُحمَّل الصفحة عبر HTTPS أو localhost. لا تسمح المتصفحات بالميكروفون إلا في البيئات الآمنة.",
+      sessionEnded: "انتهت الجلسة",
+      popoutFailed: "تعذّر فتح نافذة صورة داخل صورة: {msg}",
+      popoutBlocked: "حظر المتصفح النافذة المنبثقة. اسمح بالنوافذ المنبثقة لهذه الصفحة وانقر مجددًا.",
+      errNotAllowed: "الميكروفون أو التعرّف على الكلام محظور. اسمح بالوصول إلى الميكروفون في إعدادات الموقع في المتصفح وابدأ من جديد.",
+      errAudioCapture: "لا يوجد ميكروفون متاح. تحقّق من مدخل الصوت؛ وإذا كان تطبيق آخر يستحوذ على الميكروفون، فافتح الصفحة على جهاز آخر.",
+      errLanguage: "لا يدعم التعرّف على الكلام في هذا المتصفح اللغة {lang}.",
+      errRepeated: "فشل التعرّف على الكلام {n} مرات متتالية ({code}). تحقّق من الاتصال بالشبكة وابدأ من جديد.",
+      errStart: "تعذّر بدء التعرّف على الكلام: {msg}"
+    },
+    de: {
+      scenario: "Szenario", scPresentation: "Vortrag", scConversation: "Gespräch", scRecording: "Video / Podcast",
+      scTeaching: "Erklären / Lehren", scReading: "Vorlesen", scCustom: "Eigene Werte",
+      rangeNote: "Richtwert für Szenario und Sprechsprache. Wer Min oder Max ändert, wechselt zu „Eigene Werte“.",
+      readoutTitle: "Sprechtempo", pause: "Pause", idle: "Bereit", waiting: "Warte auf Sprache", measuring: "Messe",
+      zoneOk: "Im Korridor", zoneEdgeSlow: "Leicht zu langsam", zoneEdgeFast: "Leicht zu schnell", zoneSlow: "Zu langsam", zoneFast: "Zu schnell",
+      statusIdle: "Bereit. Start fragt nach der Mikrofonfreigabe.", statusIdleDemo: "Bereit. Demo-Modus ohne Mikrofon.",
+      statusBlocked: "Start ist deaktiviert.", statusDemo: "Demo · synthetische Wörter, kein Mikrofon",
+      statusRestarting: "Erkennung startet neu", statusRequesting: "Mikrofon wird angefragt",
+      statusWaiting: "Mikrofon aktiv · warte auf Sprache", statusPaused: "Mikrofon aktiv · Pause",
+      statusHearing: "Mikrofon aktiv · Sprache erkannt", statusRestarts: " · Neustarts: {n}",
+      start: "Start", stop: "Stop", popout: "Pop-out", popoutClose: "Pop-out schließen",
+      statsEyebrow: "Letzte Sitzung", statsTitle: "Auswertung", duration: "Dauer", peak: "Spitze",
+      avgSpeech: "Ø Sprechzeit", avgTotal: "Ø Gesamtdauer",
+      inRange: "Im Korridor", borderline: "Grenzbereich", outside: "Außerhalb",
+      settingsTitle: "Einstellungen", uiLang: "Oberfläche", speechLang: "Sprechsprache",
+      rangeMin: "Korridor min · WPM", rangeMax: "Korridor max · WPM", window: "Fenster · s", pauseThreshold: "Pausenschwelle · s",
+      includePauses: "Pausen einrechnen", beep: "Signalton nach 5 s im roten Bereich",
+      hint: "Die Einstellungen stehen in der Adresszeile hinter #. Als Lesezeichen sichern; das Gerät speichert nichts.",
+      footerPrivacy: "Die Seite speichert weder Audio noch Transkript noch Wortlisten. Die Spracherkennung läuft über den Dienst des Browsers (Chrome: Google, Safari: Apple); was du sagst, verlässt damit dein Gerät. Vertrauliches übst du besser mit neutralem Text.",
+      demoTitle: "Demo-Modus", demoText: "Synthetische Rampe von 100 bis 200 WPM über 60 s. Kein Mikrofon, keine Spracherkennung.",
+      unsupportedTitle: "Nicht unterstützt", unsupportedText: "Dieser Browser bietet keine Spracherkennung (Web Speech API). Öffne die Seite in Chrome oder Safari.",
+      insecureTitle: "Mikrofon blockiert", insecureText: "Die Seite ist nicht über HTTPS oder localhost geladen. Der Browser gibt das Mikrofon nur in sicheren Umgebungen frei.",
+      sessionEnded: "Sitzung beendet",
+      popoutFailed: "Das Picture-in-Picture-Fenster ließ sich nicht öffnen: {msg}",
+      popoutBlocked: "Der Browser hat das Popup blockiert. Erlaube Popups für diese Seite und klicke erneut.",
+      errNotAllowed: "Mikrofon oder Spracherkennung ist blockiert. Erlaube den Mikrofonzugriff in den Website-Einstellungen des Browsers und starte erneut.",
+      errAudioCapture: "Kein Mikrofon verfügbar. Prüfe die Audioeingabe; belegt eine andere App das Mikrofon exklusiv, öffne die Seite auf einem zweiten Gerät.",
+      errLanguage: "Die Spracherkennung unterstützt {lang} in diesem Browser nicht.",
+      errRepeated: "Die Spracherkennung ist {n}-mal in Folge fehlgeschlagen ({code}). Prüfe die Netzwerkverbindung und starte erneut.",
+      errStart: "Die Spracherkennung ließ sich nicht starten: {msg}"
+    }
+  };
+
+  // Translate `key` for interface language `ui`, filling {placeholders}; English is the fallback.
+  function t(ui, key, vars) {
+    var table = STRINGS[ui] || STRINGS.en;
+    var s = table[key] != null ? table[key] : STRINGS.en[key];
+    if (s == null) return key;
+    return vars ? s.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? String(vars[k]) : m; }) : s;
+  }
+
+  function isRtl(ui) { return RTL.indexOf(ui) >= 0; }
+
+  // First browser language we have an interface for, else English.
+  function pickUiLang(languages) {
+    var list = languages || [];
+    for (var i = 0; i < list.length; i++) {
+      var base = String(list[i] || '').toLowerCase().split('-')[0];
+      if (UI_LANGS.indexOf(base) >= 0) return base;
+    }
+    return DEFAULTS.ui;
+  }
+
+  function speechLangFor(ui) {
+    var i = UI_LANGS.indexOf(ui);
+    return i >= 0 ? SPEECH_LANGS[i] : DEFAULTS.lang;
+  }
+
+  function defaultsFor(languages) {
+    var ui = pickUiLang(languages);
+    var d = {};
+    for (var k in DEFAULTS) d[k] = DEFAULTS[k];
+    d.ui = ui;
+    d.lang = speechLangFor(ui);
+    return d;
+  }
+
+  // Words, not whitespace runs: Chinese has no spaces between words. Intl.Segmenter splits by
+  // dictionary per locale; without it, whitespace splitting is the fallback.
+  var segmenters = {};
+  function countWords(text, locale) {
+    var s = String(text == null ? '' : text).trim();
+    if (!s) return 0;
+    if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+      var key = locale || 'und';
+      var seg = segmenters[key];
+      if (!seg) {
+        try { seg = segmenters[key] = new Intl.Segmenter(locale || undefined, { granularity: 'word' }); } catch (e) { seg = null; }
+      }
+      if (seg) {
+        var n = 0, it = seg.segment(s)[Symbol.iterator](), step;
+        while (!(step = it.next()).done) if (step.value.isWordLike) n++;
+        return n;
+      }
+    }
+    return s.split(/\s+/).length;
   }
 
   function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
@@ -355,34 +627,43 @@ body {
 
   function flag(value) { return value === true || value === 1 || value === '1' || value === 'true'; }
 
-  function sanitize(s) {
+  function sanitize(s, defaults) {
     s = s || {};
+    var d = defaults || DEFAULTS;
     var out = {
-      min: num(s.min, DEFAULTS.min, 60, 250, 0),
-      max: num(s.max, DEFAULTS.max, 70, 300, 0),
-      windowSec: num(s.windowSec, DEFAULTS.windowSec, 10, 30, 0),
-      pauseSec: num(s.pauseSec, DEFAULTS.pauseSec, 0.8, 3, 1),
-      lang: LANGS.indexOf(s.lang) >= 0 ? s.lang : DEFAULTS.lang,
-      includePauses: flag(s.includePauses),
-      beep: flag(s.beep)
+      ui: UI_LANGS.indexOf(s.ui) >= 0 ? s.ui : d.ui,
+      lang: SPEECH_LANGS.indexOf(s.lang) >= 0 ? s.lang : d.lang,
+      scenario: SCENARIOS.indexOf(s.scenario) >= 0 ? s.scenario : d.scenario,
+      min: num(s.min, d.min, 40, 250, 0),
+      max: num(s.max, d.max, 50, 300, 0),
+      windowSec: num(s.windowSec, d.windowSec, 10, 30, 0),
+      pauseSec: num(s.pauseSec, d.pauseSec, 0.8, 3, 1),
+      includePauses: s.includePauses === undefined ? !!d.includePauses : flag(s.includePauses),
+      beep: s.beep === undefined ? !!d.beep : flag(s.beep)
     };
-    if (out.max <= out.min) out.max = Math.min(300, out.min + 20);
+    var preset = corridorFor(out.scenario, out.lang);
+    if (preset) {
+      out.min = preset.min;
+      out.max = preset.max;
+    } else if (out.max <= out.min) {
+      out.max = Math.min(300, out.min + 20);
+    }
     return out;
   }
 
-  function parseHash(hash) {
+  function parseHash(hash, defaults) {
     var p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
     function get(k) { return p.has(k) ? p.get(k) : undefined; }
     return sanitize({
-      min: get('min'), max: get('max'), windowSec: get('w'), pauseSec: get('p'),
-      lang: get('lang'), includePauses: get('pauses'), beep: get('beep')
-    });
+      ui: get('ui'), lang: get('lang'), scenario: get('sc'), min: get('min'), max: get('max'), windowSec: get('w'), pauseSec: get('p'),
+      includePauses: get('pauses'), beep: get('beep')
+    }, defaults);
   }
 
   function serializeHash(s) {
     s = sanitize(s);
-    return 'min=' + s.min + '&max=' + s.max + '&w=' + s.windowSec + '&p=' + s.pauseSec +
-      '&lang=' + s.lang + '&pauses=' + (s.includePauses ? 1 : 0) + '&beep=' + (s.beep ? 1 : 0);
+    return 'ui=' + s.ui + '&lang=' + s.lang + '&sc=' + s.scenario + '&min=' + s.min + '&max=' + s.max + '&w=' + s.windowSec +
+      '&p=' + s.pauseSec + '&pauses=' + (s.includePauses ? 1 : 0) + '&beep=' + (s.beep ? 1 : 0);
   }
 
   function classify(wpm, min, max) {
@@ -401,7 +682,25 @@ body {
     return null;
   }
 
-  function scalePercent(wpm) { return clamp((wpm - SCALE.from) / (SCALE.to - SCALE.from), 0, 1) * 100; }
+  function round5(v) { return Math.round(v / 5) * 5; }
+
+  // Recommended corridor for a preset scenario in a speech language; null for 'custom'.
+  function corridorFor(scenario, lang) {
+    var base = SCENARIO_BASE[scenario];
+    if (!base) return null;
+    var f = LANG_FACTOR[lang] || 1;
+    return { min: round5(base[0] * f), max: round5(base[1] * f) };
+  }
+
+  // Gauge range around the corridor: 50 WPM below, 70 above, on round tens.
+  function scaleFor(min, max) {
+    return { from: Math.max(0, Math.floor((min - 50) / 10) * 10), to: Math.ceil((max + 70) / 10) * 10 };
+  }
+
+  var ZONE_KEYS = { ok: 'zoneOk', 'edge-slow': 'zoneEdgeSlow', 'edge-fast': 'zoneEdgeFast', slow: 'zoneSlow', fast: 'zoneFast' };
+  function zoneKey(zone) { return ZONE_KEYS[zone] || null; }
+
+  function scalePercent(wpm, scale) { return clamp((wpm - scale.from) / (scale.to - scale.from), 0, 1) * 100; }
 
   // Words per minute over a sliding window, counted over speaking time only.
   // A gap between word events contributes at most the pause threshold P to the denominator.
@@ -540,9 +839,13 @@ body {
   };
 
   root.WPTCore = {
-    DEFAULTS: DEFAULTS, SCALE: SCALE, MARGIN: MARGIN, MIN_SPEECH_MS: MIN_SPEECH_MS, ALARM_MS: ALARM_MS,
+    UI_LANGS: UI_LANGS, SPEECH_LANGS: SPEECH_LANGS, LANG_NAMES: LANG_NAMES, SPEECH_NAMES: SPEECH_NAMES, STRINGS: STRINGS,
+    SCENARIOS: SCENARIOS, SCENARIO_BASE: SCENARIO_BASE, LANG_FACTOR: LANG_FACTOR,
+    DEFAULTS: DEFAULTS, MARGIN: MARGIN, MIN_SPEECH_MS: MIN_SPEECH_MS, ALARM_MS: ALARM_MS,
+    t: t, isRtl: isRtl, pickUiLang: pickUiLang, speechLangFor: speechLangFor, defaultsFor: defaultsFor,
     countWords: countWords, sanitize: sanitize, parseHash: parseHash, serializeHash: serializeHash,
-    classify: classify, toneOf: toneOf, scalePercent: scalePercent,
+    corridorFor: corridorFor, scaleFor: scaleFor,
+    classify: classify, toneOf: toneOf, zoneKey: zoneKey, scalePercent: scalePercent,
     PaceTracker: PaceTracker, DemoSource: DemoSource
   };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -556,10 +859,6 @@ body {
   var isDemo = new URLSearchParams(location.search).get('demo') === '1';
   var BACKOFF = [250, 1000, 3000];
   var MAX_FAILURES = 5;
-  var ZONE_LABEL = {
-    ok: 'Im Korridor', 'edge-slow': 'Leicht zu langsam', 'edge-fast': 'Leicht zu schnell',
-    slow: 'Zu langsam', fast: 'Zu schnell'
-  };
 
   function $(id) { return document.getElementById(id); }
   var els = {
@@ -569,34 +868,81 @@ body {
     bands: { slow: $('band-slow'), edgeSlow: $('band-edge-slow'), ok: $('band-ok'), edgeFast: $('band-edge-fast'), fast: $('band-fast') },
     dot: $('status-dot'), status: $('status-text'), start: $('start'), popout: $('popout'),
     stats: $('stats'),
-    min: $('set-min'), max: $('set-max'), w: $('set-w'), p: $('set-p'), lang: $('set-lang'),
+    ui: $('set-ui'), lang: $('set-lang'), scenario: $('set-scenario'),
+    min: $('set-min'), max: $('set-max'), w: $('set-w'), p: $('set-p'),
     pauses: $('set-pauses'), beep: $('set-beep')
   };
 
-  var settings = Core.parseHash(location.hash);
+  var defaults = Core.defaultsFor(navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]);
+  var settings = Core.parseHash(location.hash, defaults);
   var tracker = new Core.PaceTracker(settings, performance.now());
   var session = null;   // { demo, restarts, failures, fatal, nextDelay, listening, restarting, cancelRestart }
   var rec = null;
   var mini = null;      // { win, doc, root, wpm, label, dot }
   var lastSnap = null;
   var blocked = false;
+  var notice = null;    // { titleKey, textKey, vars, tone } so it can be re-translated
+
+  function t(key, vars) { return Core.t(settings.ui, key, vars); }
+
+  // ---- Language ------------------------------------------------------------
+  function fillSelect(select, values, names, lang) {
+    select.textContent = '';
+    values.forEach(function (v) {
+      var opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = names[v];
+      opt.lang = lang || v.split('-')[0];
+      select.appendChild(opt);
+    });
+  }
+
+  var SCENARIO_KEYS = {
+    presentation: 'scPresentation', conversation: 'scConversation', recording: 'scRecording',
+    teaching: 'scTeaching', reading: 'scReading', custom: 'scCustom'
+  };
+  function fillScenarios() {
+    var names = {};
+    Core.SCENARIOS.forEach(function (sc) { names[sc] = t(SCENARIO_KEYS[sc]); });
+    fillSelect(els.scenario, Core.SCENARIOS, names, settings.ui);
+    els.scenario.value = settings.scenario;
+  }
+
+  function applyLanguage() {
+    var ui = settings.ui, dir = Core.isRtl(ui) ? 'rtl' : 'ltr';
+    document.documentElement.lang = ui;
+    document.documentElement.dir = dir;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    fillScenarios();
+    els.start.textContent = t(session ? 'stop' : 'start');
+    els.popout.textContent = t(mini ? 'popoutClose' : 'popout');
+    if (notice) showNotice(notice.titleKey, notice.textKey, notice.vars, notice.tone);
+    if (mini) {
+      mini.doc.documentElement.lang = ui;
+      mini.doc.documentElement.dir = dir;
+    }
+    render(lastSnap);
+  }
 
   // ---- Notices -------------------------------------------------------------
-  function showNotice(title, text, tone) {
-    els.noticeTitle.textContent = title;
-    els.noticeText.textContent = text;
+  function showNotice(titleKey, textKey, vars, tone) {
+    notice = { titleKey: titleKey, textKey: textKey, vars: vars, tone: tone };
+    els.noticeTitle.textContent = t(titleKey);
+    els.noticeText.textContent = t(textKey, vars);
     els.notice.setAttribute('data-tone', tone || 'neutral');
     els.notice.hidden = false;
   }
-  function hideNotice() { els.notice.hidden = true; }
+  function hideNotice() { notice = null; els.notice.hidden = true; }
 
   // ---- Theme ---------------------------------------------------------------
   var darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
   function currentTheme() { return darkQuery && darkQuery.matches ? 'dark' : 'light'; }
   function applyTheme() {
-    var t = currentTheme();
-    document.documentElement.setAttribute('data-theme', t);
-    if (mini) mini.doc.documentElement.setAttribute('data-theme', t);
+    var theme = currentTheme();
+    document.documentElement.setAttribute('data-theme', theme);
+    if (mini) mini.doc.documentElement.setAttribute('data-theme', theme);
   }
   if (darkQuery) {
     if (darkQuery.addEventListener) darkQuery.addEventListener('change', applyTheme);
@@ -647,18 +993,19 @@ body {
   }
   function beep() {
     if (!audioCtx) return;
-    var t = audioCtx.currentTime, osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    var now = audioCtx.currentTime, osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
     osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-    osc.start(t);
-    osc.stop(t + 0.2);
+    osc.start(now);
+    osc.stop(now + 0.2);
   }
 
   // ---- Speech recognition -------------------------------------------------------
+  // Errors are stored as message keys so a later language switch can still translate them.
   function startRecognition() {
     var s = session;
     if (!s) return;
@@ -676,7 +1023,7 @@ body {
     r.onresult = function (e) {
       if (session !== s) return;
       var total = 0;
-      for (var i = 0; i < e.results.length; i++) total += Core.countWords(e.results[i][0].transcript);
+      for (var i = 0; i < e.results.length; i++) total += Core.countWords(e.results[i][0].transcript, r.lang);
       tracker.ingestTotal(total, performance.now());
       s.failures = 0;
       s.nextDelay = BACKOFF[0];
@@ -686,13 +1033,13 @@ body {
       switch (e.error) {
         case 'not-allowed':
         case 'service-not-allowed':
-          s.fatal = 'Mikrofon oder Spracherkennung ist blockiert. Erlaube den Mikrofonzugriff in den Website-Einstellungen des Browsers und starte erneut.';
+          s.fatal = { key: 'errNotAllowed' };
           break;
         case 'audio-capture':
-          s.fatal = 'Kein Mikrofon verfügbar. Prüfe die Audioeingabe; belegt eine andere App das Mikrofon exklusiv, öffne die Seite auf einem zweiten Gerät.';
+          s.fatal = { key: 'errAudioCapture' };
           break;
         case 'language-not-supported':
-          s.fatal = 'Die Spracherkennung unterstützt ' + settings.lang + ' in diesem Browser nicht.';
+          s.fatal = { key: 'errLanguage', vars: { lang: r.lang } };
           break;
         case 'no-speech':
         case 'aborted':
@@ -702,9 +1049,7 @@ body {
         default:
           s.failures += 1;
           s.nextDelay = BACKOFF[Math.min(s.failures - 1, BACKOFF.length - 1)];
-          if (s.failures >= MAX_FAILURES) {
-            s.fatal = 'Die Spracherkennung ist ' + MAX_FAILURES + '-mal in Folge fehlgeschlagen (' + e.error + '). Prüfe die Netzwerkverbindung und starte erneut.';
-          }
+          if (s.failures >= MAX_FAILURES) s.fatal = { key: 'errRepeated', vars: { n: MAX_FAILURES, code: e.error } };
       }
     };
     r.onend = function () {
@@ -728,7 +1073,7 @@ body {
       r.start();
     } catch (err) {
       rec = null;
-      stop('Die Spracherkennung ließ sich nicht starten: ' + (err && err.message ? err.message : err));
+      stop({ key: 'errStart', vars: { msg: err && err.message ? err.message : String(err) } });
     }
   }
 
@@ -745,7 +1090,7 @@ body {
     };
     ensureAudio();
     requestWakeLock();
-    els.start.textContent = 'Stop';
+    els.start.textContent = t('stop');
     els.stats.hidden = true;
     if (!isDemo) startRecognition();
     if (session) {
@@ -754,7 +1099,7 @@ body {
     }
   }
 
-  function stop(message) {
+  function stop(error) {
     if (!session) return;
     var s = session;
     session = null;
@@ -766,11 +1111,11 @@ body {
     }
     setTicker(null);
     releaseWakeLock();
-    els.start.textContent = 'Start';
+    els.start.textContent = t('start');
     showStats(tracker.summary(performance.now()));
     lastSnap = null;
     render(null);
-    if (message) showNotice('Sitzung beendet', message, 'danger');
+    if (error) showNotice('sessionEnded', error.key, error.vars, 'danger');
   }
 
   function onTick() {
@@ -791,23 +1136,23 @@ body {
 
   function statusFor(snap) {
     if (!session) {
-      if (blocked) return { tone: 'danger', text: 'Start ist deaktiviert.' };
-      return { tone: null, text: isDemo ? 'Bereit. Demo-Modus ohne Mikrofon.' : 'Bereit. Start fragt nach der Mikrofonfreigabe.' };
+      if (blocked) return { tone: 'danger', text: t('statusBlocked') };
+      return { tone: null, text: t(isDemo ? 'statusIdleDemo' : 'statusIdle') };
     }
-    var suffix = session.restarts ? ' · Neustarts: ' + session.restarts : '';
-    if (session.demo) return { tone: snap && snap.paused ? 'warn' : 'ok', text: 'Demo · synthetische Wörter, kein Mikrofon' };
-    if (session.restarting) return { tone: 'warn', text: 'Erkennung startet neu' + suffix };
-    if (!session.listening) return { tone: 'warn', text: 'Mikrofon wird angefragt' + suffix };
-    if (!snap || !snap.hasSpeech) return { tone: 'warn', text: 'Mikrofon aktiv · warte auf Sprache' + suffix };
-    if (snap.paused) return { tone: 'warn', text: 'Mikrofon aktiv · Pause' + suffix };
-    return { tone: 'ok', text: 'Mikrofon aktiv · Sprache erkannt' + suffix };
+    var suffix = session.restarts ? t('statusRestarts', { n: session.restarts }) : '';
+    if (session.demo) return { tone: snap && snap.paused ? 'warn' : 'ok', text: t('statusDemo') };
+    if (session.restarting) return { tone: 'warn', text: t('statusRestarting') + suffix };
+    if (!session.listening) return { tone: 'warn', text: t('statusRequesting') + suffix };
+    if (!snap || !snap.hasSpeech) return { tone: 'warn', text: t('statusWaiting') + suffix };
+    if (snap.paused) return { tone: 'warn', text: t('statusPaused') + suffix };
+    return { tone: 'ok', text: t('statusHearing') + suffix };
   }
 
   function labelFor(snap, short) {
-    if (!session) return 'Bereit';
-    if (!snap || snap.value == null) return snap && snap.hasSpeech ? 'Messe' : 'Warte auf Sprache';
-    if (short && snap.paused) return 'Pause';
-    return ZONE_LABEL[snap.zone];
+    if (!session) return t('idle');
+    if (!snap || snap.value == null) return t(snap && snap.hasSpeech ? 'measuring' : 'waiting');
+    if (short && snap.paused) return t('pause');
+    return t(Core.zoneKey(snap.zone));
   }
 
   function render(snap) {
@@ -821,7 +1166,7 @@ body {
     els.pause.hidden = !(session && snap && snap.paused);
     if (snap && snap.value != null) {
       els.marker.hidden = false;
-      els.marker.style.left = Core.scalePercent(snap.value) + '%';
+      els.marker.style.left = Core.scalePercent(snap.value, scale) + '%';
     } else {
       els.marker.hidden = true;
     }
@@ -836,24 +1181,26 @@ body {
     }
   }
 
+  var scale = Core.scaleFor(settings.min, settings.max);
   function renderGauge() {
     var min = settings.min, max = settings.max, m = Core.MARGIN;
+    scale = Core.scaleFor(min, max);
     function place(el, a, b) {
-      var l = Core.scalePercent(a), r = Core.scalePercent(b);
+      var l = Core.scalePercent(a, scale), r = Core.scalePercent(b, scale);
       el.style.left = l + '%';
       el.style.width = Math.max(0, r - l) + '%';
     }
-    place(els.bands.slow, Core.SCALE.from, min - m);
+    place(els.bands.slow, scale.from, min - m);
     place(els.bands.edgeSlow, min - m, min);
     place(els.bands.ok, min, max);
     place(els.bands.edgeFast, max, max + m);
-    place(els.bands.fast, max + m, Core.SCALE.to);
+    place(els.bands.fast, max + m, scale.to);
 
     els.scale.textContent = '';
-    [Core.SCALE.from, min, max, Core.SCALE.to].forEach(function (v) {
+    [scale.from, min, max, scale.to].forEach(function (v) {
       var span = document.createElement('span');
       span.textContent = String(v);
-      span.style.left = Core.scalePercent(v) + '%';
+      span.style.left = Core.scalePercent(v, scale) + '%';
       els.scale.appendChild(span);
     });
   }
@@ -874,51 +1221,65 @@ body {
     $('split-ok').style.width = pct(z.ok) + '%';
     $('split-warn').style.width = pct(z.warn) + '%';
     $('split-danger').style.width = pct(z.danger) + '%';
-    $('lg-ok').textContent = 'Im Korridor ' + (total ? pct(z.ok) + ' %' : '–');
-    $('lg-warn').textContent = 'Grenzbereich ' + (total ? pct(z.warn) + ' %' : '–');
-    $('lg-danger').textContent = 'Außerhalb ' + (total ? pct(z.danger) + ' %' : '–');
+    $('lg-ok').textContent = total ? pct(z.ok) + ' %' : '–';
+    $('lg-warn').textContent = total ? pct(z.warn) + ' %' : '–';
+    $('lg-danger').textContent = total ? pct(z.danger) + ' %' : '–';
     els.stats.hidden = false;
   }
 
   // ---- Settings ---------------------------------------------------------------------
   function writeForm() {
+    els.ui.value = settings.ui;
+    els.lang.value = settings.lang;
+    els.scenario.value = settings.scenario;
     els.min.value = settings.min;
     els.max.value = settings.max;
     els.w.value = settings.windowSec;
     els.p.value = settings.pauseSec;
-    els.lang.value = settings.lang;
     els.pauses.setAttribute('aria-checked', String(settings.includePauses));
     els.beep.setAttribute('aria-checked', String(settings.beep));
   }
 
   function readForm() {
     return {
+      ui: els.ui.value, lang: els.lang.value, scenario: els.scenario.value,
       min: els.min.value, max: els.max.value, windowSec: els.w.value, pauseSec: els.p.value,
-      lang: els.lang.value,
       includePauses: els.pauses.getAttribute('aria-checked') === 'true',
       beep: els.beep.getAttribute('aria-checked') === 'true'
     };
   }
 
-  function applySettings(next) {
-    var prevLang = settings.lang;
-    settings = Core.sanitize(next);
-    tracker.configure(settings);
-    writeForm();
-    renderGauge();
+  function writeHash() {
     var hash = '#' + Core.serializeHash(settings);
     if (location.hash !== hash) {
       try { history.replaceState(null, '', location.pathname + location.search + hash); } catch (e) {}
     }
-    // A new language needs a new recognition run; onend restarts it with the current setting.
-    if (session && rec && prevLang !== settings.lang) {
+  }
+
+  function applySettings(next) {
+    var prev = settings;
+    settings = Core.sanitize(next, defaults);
+    tracker.configure(settings);
+    writeForm();
+    renderGauge();
+    writeHash();
+    if (prev.ui !== settings.ui) applyLanguage();
+    // A new speech language needs a new recognition run; onend restarts it with the current setting.
+    if (session && rec && prev.lang !== settings.lang) {
       try { rec.abort(); } catch (e) {}
     }
     if (session) onTick();
   }
 
-  [els.min, els.max, els.w, els.p, els.lang].forEach(function (el) {
+  [els.ui, els.lang, els.scenario, els.w, els.p].forEach(function (el) {
     el.addEventListener('change', function () { applySettings(readForm()); });
+  });
+  // Typing a corridor of your own leaves the preset.
+  [els.min, els.max].forEach(function (el) {
+    el.addEventListener('change', function () {
+      els.scenario.value = 'custom';
+      applySettings(readForm());
+    });
   });
   [els.pauses, els.beep].forEach(function (el) {
     el.addEventListener('click', function () {
@@ -927,13 +1288,13 @@ body {
       if (settings.beep) ensureAudio();
     });
   });
-  window.addEventListener('hashchange', function () { applySettings(Core.parseHash(location.hash)); });
+  window.addEventListener('hashchange', function () { applySettings(Core.parseHash(location.hash, defaults)); });
 
   // ---- Pop-out -------------------------------------------------------------------------
   var MINI_HTML =
     '<div class="mini" data-tone="idle">' +
-      '<div class="mini-top caps"><span class="dot"></span><span class="mini-label">Bereit</span></div>' +
-      '<div class="mini-value"><span class="mini-wpm">–</span><span class="mini-unit caps">WPM</span></div>' +
+      '<div class="mini-top caps"><span class="dot"></span><span class="mini-label"></span></div>' +
+      '<div class="mini-value"><span class="mini-wpm">–</span><span class="mini-unit caps" lang="en">WPM</span></div>' +
       '<div class="mini-bar"></div>' +
     '</div>';
 
@@ -941,7 +1302,8 @@ body {
     var doc = win.document;
     doc.title = 'Word Pace';
     doc.documentElement.setAttribute('data-theme', currentTheme());
-    doc.documentElement.setAttribute('lang', 'de');
+    doc.documentElement.lang = settings.ui;
+    doc.documentElement.dir = Core.isRtl(settings.ui) ? 'rtl' : 'ltr';
     doc.head.textContent = '';
     var meta = doc.createElement('meta');
     meta.setAttribute('charset', 'utf-8');
@@ -961,10 +1323,10 @@ body {
     win.addEventListener('pagehide', function () {
       if (!mini || mini.win !== win) return;
       mini = null;
-      els.popout.textContent = 'Pop-out';
+      els.popout.textContent = t('popout');
       if (session) setTicker(window);
     });
-    els.popout.textContent = 'Pop-out schließen';
+    els.popout.textContent = t('popoutClose');
     if (session) setTicker(win);
     render(lastSnap);
   }
@@ -973,14 +1335,14 @@ body {
     if ('documentPictureInPicture' in window) {
       // Chrome, Edge: always-on-top window.
       window.documentPictureInPicture.requestWindow({ width: 240, height: 140 }).then(attachMini, function (err) {
-        showNotice('Pop-out', 'Das Picture-in-Picture-Fenster ließ sich nicht öffnen: ' + (err && err.message ? err.message : err), 'warn');
+        showNotice('popout', 'popoutFailed', { msg: err && err.message ? err.message : String(err) }, 'warn');
       });
       return;
     }
     // Safari, Firefox: a small popup, not always on top.
     var win = window.open('', 'wpt-mini', 'popup,width=240,height=140');
     if (!win) {
-      showNotice('Pop-out', 'Der Browser hat das Popup blockiert. Erlaube Popups für diese Seite und klicke erneut.', 'warn');
+      showNotice('popout', 'popoutBlocked', null, 'warn');
       return;
     }
     attachMini(win);
@@ -999,24 +1361,25 @@ body {
     if (session) stop(); else start();
   });
 
+  fillSelect(els.ui, Core.UI_LANGS, Core.LANG_NAMES);
+  fillSelect(els.lang, Core.SPEECH_LANGS, Core.SPEECH_NAMES);
+  fillScenarios();
   writeForm();
   renderGauge();
   applyTheme();
-  if (!location.hash) {
-    try { history.replaceState(null, '', location.pathname + location.search + '#' + Core.serializeHash(settings)); } catch (e) {}
-  }
+  writeHash();
 
   if (isDemo) {
-    showNotice('Demo-Modus', 'Synthetische Rampe von 100 bis 200 WPM über 60 s. Kein Mikrofon, keine Spracherkennung.', 'neutral');
+    showNotice('demoTitle', 'demoText', null, 'neutral');
   } else if (!SR) {
     blocked = true;
-    showNotice('Nicht unterstützt', 'Dieser Browser bietet keine Spracherkennung (Web Speech API). Öffne die Seite in Chrome oder Safari.', 'danger');
+    showNotice('unsupportedTitle', 'unsupportedText', null, 'danger');
   } else if (!window.isSecureContext) {
     blocked = true;
-    showNotice('Mikrofon blockiert', 'Die Seite ist nicht über HTTPS oder localhost geladen. Der Browser gibt das Mikrofon nur in sicheren Umgebungen frei.', 'danger');
+    showNotice('insecureTitle', 'insecureText', null, 'danger');
   }
   els.start.disabled = blocked;
-  render(null);
+  applyLanguage();
 })();
 </script>
 </body>
