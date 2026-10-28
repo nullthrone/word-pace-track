@@ -32,6 +32,14 @@ npm run test:browser                       # demo mode in headless Chromium
 
 CI runs both on every pull request; `main` deploys to GitHub Pages after they pass.
 
+## 🌍 Translations and language norms
+
+The interface speaks English, 中文, हिन्दी, Español, العربية and Deutsch. All strings live in `STRINGS` inside `<script id="wpt-core">`; a unit test fails if a language misses a key or a `{placeholder}`.
+
+- **Native speakers wanted.** The current translations were written without native review. Corrections are some of the most valuable PRs here.
+- **A new language** needs a `STRINGS` table, an entry in `UI_LANGS`, `SPEECH_LANGS`, `LANG_NAMES`, `SPEECH_NAMES` and a `LANG_FACTOR` with a cited source (see the README). Right-to-left scripts also go into `RTL`.
+- **Speech-rate norms** (`SCENARIO_BASE`, `LANG_FACTOR`) change only with a source: a paper, a broadcaster's guideline or similar. Link it in the PR and in the README table.
+
 ## 📏 Measurement reports
 
 Measurement issues are the most useful ones. Please include the text length in words, your stopwatch time, the WPM the page showed, the browser and the language setting.
