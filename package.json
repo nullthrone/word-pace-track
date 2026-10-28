@@ -1,0 +1,13 @@
+{
+  "name": "word-pace-track",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Live speaking pace in words per minute. One HTML file, runs in the browser, stores nothing.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/core.test.mjs",
+    "test:browser": "node tests/smoke.mjs"
+  }
+}

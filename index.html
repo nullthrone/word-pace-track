@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Live-Sprechtempo in Wörtern pro Minute. Läuft im Browser, speichert weder Audio noch Text.">
+<title>Word Pace · Nullthrone</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 274 266'%3E%3Cg fill='%23141317'%3E%3Cpath d='M81,0 H193 V17 H81 Z'/%3E%3Cpath fill-rule='evenodd' d='M61,21 H213 V266 H61 Z M92,97 A45,45 0 0 1 182,97 V199 A45,45 0 0 1 92,199 Z'/%3E%3Cpath d='M39,62 L56,50 V266 H39 Z'/%3E%3Cpath d='M235,62 L218,50 V266 H235 Z'/%3E%3Cpath d='M17,106 L34,94 V266 H17 Z'/%3E%3Cpath d='M257,106 L240,94 V266 H257 Z'/%3E%3Cpath d='M0,257 H56 V266 H0 Z'/%3E%3Cpath d='M218,257 H274 V266 H218 Z'/%3E%3C/g%3E%3C/svg%3E">
+<script>
+  // Set the theme before first paint; the design system switches on data-theme, not on the media query.
+  try {
+    if (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch (e) {}
+</script>
+<style>
+/* Nullthrone tokens (tokens.json, light first, dark as primitive inversion). */
+:root {
+  --ink-950: #141317; --ink-900: #1E1C21; --ink-700: #3A3740; --ink-500: #6E6B72;
+  --ink-400: #928F96; --ink-300: #B6B3B8; --ink-200: #D9D6D3; --ink-100: #E9E6DF;
+  --paper: #F4F2EC; --paper-raised: #FBFAF6; --paper-white: #FFFFFF;
+  --brass-700: #7A5A1F; --brass-600: #8F6B26; --brass-500: #A87E2F; --brass-400: #C09A4B;
+  --brass-200: #E4D5AC; --brass-100: #EFE6CD;
+  --green-600: #2F6B4F; --green-100: #DFEAE3;
+  --amber-600: #A05E14; --amber-100: #F3E5D2;
+  --red-600: #8C2F2E; --red-100: #F0DDDC;
+  --press-ink: #000000;
+  --shadow-1: 0 1px 2px rgba(20,19,23,.07);
+  --focus-ring: 0 0 0 2px #F4F2EC, 0 0 0 4px #A87E2F;
+
+  --text-body: var(--ink-950); --text-muted: var(--ink-500); --text-faint: var(--ink-400);
+  --text-accent: var(--brass-600);
+  --surface-page: var(--paper); --surface-card: var(--paper-raised); --surface-inset: var(--ink-100);
+  --border-line: var(--ink-200); --border-strong: var(--ink-950); --border-mid: var(--ink-300);
+  --ok: var(--green-600); --ok-bg: var(--green-100);
+  --warn: var(--amber-600); --warn-bg: var(--amber-100);
+  --danger: var(--red-600); --danger-bg: var(--red-100);
+  --line: 1px solid var(--border-line);
+  --line-strong: 1px solid var(--border-strong);
+
+  /* No external fonts (CSP): the brand faces first, then their closest system relatives. */
+  --font-display: "Jost", "Futura", "Avenir Next", "Century Gothic", system-ui, sans-serif;
+  --font-body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --control-h-md: 36px; --control-h-lg: 44px;
+  --track-caps: 0.14em; --track-caps-wide: 0.22em; --track-display: 0.01em;
+  --leading-tight: 1.15; --leading-body: 1.55;
+  --dur-fast: 120ms; --dur-med: 200ms; --dur-slow: 320ms;
+  --ease: cubic-bezier(.2,0,0,1);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --ink-950: #EFEDE7; --ink-900: #DEDBD4; --ink-700: #B4B0A9; --ink-500: #8A8781;
+  --ink-400: #6E6B67; --ink-300: #4C4952; --ink-200: #33313A; --ink-100: #100F13;
+  --paper: #17161A; --paper-raised: #1F1D22; --paper-white: #2B2930;
+  --brass-700: #B98B36; --brass-600: #DCB768; --brass-500: #C89E4A; --brass-400: #8F6B26;
+  --brass-200: #4A3A1B; --brass-100: #2A2110;
+  --green-600: #6FA98C; --green-100: #1A2A23;
+  --amber-600: #D9853C; --amber-100: #2C2117;
+  --red-600: #CB6A62; --red-100: #2C1B1B;
+  --press-ink: #8A8781;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.45);
+  --focus-ring: 0 0 0 2px #17161A, 0 0 0 4px #C89E4A;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--surface-page); }
+body {
+  margin: 0; font-family: var(--font-body); font-size: 15px; line-height: var(--leading-body);
+  color: var(--text-body); background: var(--surface-page); -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--brass-200); }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.caps {
+  font-family: var(--font-display); font-weight: 500; line-height: var(--leading-tight);
+  letter-spacing: var(--track-caps); text-transform: uppercase;
+}
+
+.page { max-width: 560px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-7); }
+
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-bottom: var(--space-3); }
+.brand { display: flex; align-items: center; gap: var(--space-3); color: var(--ink-950); }
+.mark { width: 26px; height: auto; display: block; }
+.brand-name { font-size: 14px; letter-spacing: var(--track-caps-wide); }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: var(--track-caps-wide); color: var(--text-accent); }
+.double-rule { border-top: var(--line-strong); padding-top: 3px; margin-bottom: var(--space-5); }
+.double-rule::after { content: ""; display: block; border-top: var(--line-strong); }
+
+.card { background: var(--surface-card); border: var(--line); box-shadow: var(--shadow-1); padding: var(--space-5); margin-bottom: var(--space-5); }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 20px; margin-bottom: var(--space-3); }
+.card-title { margin: var(--space-2) 0 var(--space-4); font-family: var(--font-display); font-size: 20px; font-weight: 500; line-height: var(--leading-tight); letter-spacing: var(--track-display); }
+
+.badge { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; font-size: 10px; border: 1px solid var(--ink-300); background: var(--surface-inset); color: var(--ink-700); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+
+/* Readout: the zone colours the whole panel so it reads from across the desk. */
+.readout {
+  border: 1px solid var(--border-mid); background: var(--surface-inset); padding: var(--space-4) var(--space-4) var(--space-3);
+  text-align: center; transition: background-color var(--dur-med) var(--ease), border-color var(--dur-med) var(--ease);
+}
+.readout[data-tone="ok"] { background: var(--ok-bg); border-color: var(--ok); }
+.readout[data-tone="warn"] { background: var(--warn-bg); border-color: var(--warn); }
+.readout[data-tone="danger"] { background: var(--danger-bg); border-color: var(--danger); }
+.readout-value { display: flex; align-items: baseline; justify-content: center; gap: var(--space-2); }
+.wpm {
+  font-family: var(--font-display); font-weight: 500; font-size: 112px; line-height: 1;
+  font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; color: var(--text-body);
+  transition: color var(--dur-med) var(--ease);
+}
+.readout[data-tone="ok"] .wpm { color: var(--ok); }
+.readout[data-tone="warn"] .wpm { color: var(--warn); }
+.readout[data-tone="danger"] .wpm { color: var(--danger); }
+.wpm-unit { font-size: 13px; color: var(--text-muted); }
+.zone-label { margin: var(--space-2) 0 0; font-size: 13px; color: var(--text-body); }
+
+.gauge { margin-top: var(--space-4); }
+.gauge-track { position: relative; height: 24px; border: var(--line-strong); background: var(--surface-inset); overflow: hidden; }
+.band { position: absolute; top: 0; bottom: 0; }
+.band-ok { background: var(--ok-bg); border-left: 1px solid var(--ok); border-right: 1px solid var(--ok); }
+.band-warn { background: var(--warn-bg); }
+.band-danger { background: var(--danger-bg); }
+.gauge-marker { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--ink-950); transition: left var(--dur-slow) var(--ease); }
+.gauge-scale { position: relative; height: 16px; margin-top: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.gauge-scale span { position: absolute; top: 0; transform: translateX(-50%); }
+.gauge-scale span:first-child { transform: none; }
+.gauge-scale span:last-child { transform: translateX(-100%); }
+
+.status { display: flex; align-items: center; gap: var(--space-2); min-height: 20px; margin: var(--space-4) 0 0; font-size: 13px; color: var(--text-muted); }
+.dot { width: 8px; height: 8px; flex: none; background: var(--ink-300); }
+.dot[data-tone="ok"] { background: var(--ok); }
+.dot[data-tone="warn"] { background: var(--warn); }
+.dot[data-tone="danger"] { background: var(--danger); }
+
+.actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
+.actions .btn { flex: 1; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--control-h-md); padding: 0 16px; border: 1px solid transparent; border-radius: 0;
+  font-size: 12px; white-space: nowrap; cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.btn-lg { height: var(--control-h-lg); padding: 0 24px; font-size: 13px; }
+.btn-primary { background: var(--ink-950); color: var(--paper); border-color: var(--ink-950); }
+.btn-primary:hover { background: var(--ink-700); }
+.btn-primary:active { background: var(--press-ink); }
+.btn-outline { background: transparent; color: var(--ink-950); border-color: var(--ink-950); }
+.btn-outline:hover { background: var(--surface-inset); }
+.btn-outline:active { background: var(--ink-200); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field-wide { grid-column: 1 / -1; }
+.field-label { font-size: 11px; color: var(--ink-700); }
+.input {
+  width: 100%; height: var(--control-h-md); padding: 0 12px; border: 1px solid var(--border-mid); border-radius: 0;
+  background: var(--paper-white); color: var(--text-body); font-family: var(--font-mono); font-size: 14px;
+  outline: none; transition: border-color var(--dur-fast) var(--ease);
+}
+.input:focus { border-color: var(--ink-950); box-shadow: var(--focus-ring); }
+.select-wrap { position: relative; }
+.select-wrap select { appearance: none; -webkit-appearance: none; padding-right: 32px; font-family: var(--font-body); }
+.select-wrap::after {
+  content: ""; position: absolute; right: 14px; top: 50%; width: 6px; height: 6px; margin-top: -5px;
+  border-right: 1.5px solid var(--ink-950); border-bottom: 1.5px solid var(--ink-950); transform: rotate(45deg); pointer-events: none;
+}
+.switches { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-4); }
+.switch {
+  display: inline-flex; align-items: center; gap: 10px; min-height: var(--control-h-md); padding: 0;
+  background: none; border: 0; color: var(--text-body); font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+}
+.switch:focus-visible { box-shadow: none; }
+.switch:focus-visible .switch-track { box-shadow: var(--focus-ring); }
+.switch-track { position: relative; width: 36px; height: 20px; flex: none; border: 1px solid var(--ink-950); background: var(--paper-white); transition: background-color var(--dur-med) var(--ease); }
+.switch-thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--ink-950); transition: left var(--dur-med) var(--ease), background-color var(--dur-med) var(--ease); }
+.switch[aria-checked="true"] .switch-track { background: var(--ink-950); }
+.switch[aria-checked="true"] .switch-thumb { left: 18px; background: var(--paper); }
+.hint { margin: var(--space-3) 0 0; font-size: 13px; color: var(--text-muted); }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-4); margin: 0; border-top: var(--line); }
+.stats-grid > div { padding: var(--space-3) 0; border-bottom: var(--line); }
+.stats-grid dt { font-size: 11px; color: var(--text-muted); }
+.stats-grid dd { margin: 4px 0 0; font-family: var(--font-display); font-size: 28px; font-weight: 500; line-height: var(--leading-tight); font-variant-numeric: tabular-nums; }
+.split { display: flex; height: 8px; margin-top: var(--space-4); border: var(--line); background: var(--surface-inset); }
+.split span { height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: var(--space-2) 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--text-muted); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.tone-ok { background: var(--ok); }
+.tone-warn { background: var(--warn); }
+.tone-danger { background: var(--danger); }
+
+.notice { margin-bottom: var(--space-5); padding: var(--space-3) var(--space-4); border: 1px solid var(--ink-300); background: var(--surface-inset); font-size: 14px; }
+.notice[data-tone="warn"] { border-color: var(--warn); background: var(--warn-bg); }
+.notice[data-tone="danger"] { border-color: var(--danger); background: var(--danger-bg); }
+.notice-title { display: block; margin-bottom: 2px; font-size: 11px; }
+
+.footer { border-top: var(--line); padding-top: var(--space-4); font-size: 13px; color: var(--text-muted); }
+.footer p { margin: 0 0 var(--space-2); }
+.footer-meta { font-size: 11px; }
+
+/* Pop-out: number, colour bar, status dot. */
+.mini-body { margin: 0; height: 100vh; overflow: hidden; background: var(--surface-card); color: var(--text-body); font-family: var(--font-body); }
+.mini { display: flex; flex-direction: column; height: 100vh; background: var(--surface-inset); transition: background-color var(--dur-med) var(--ease); }
+.mini[data-tone="ok"] { background: var(--ok-bg); }
+.mini[data-tone="warn"] { background: var(--warn-bg); }
+.mini[data-tone="danger"] { background: var(--danger-bg); }
+.mini-top { display: flex; align-items: center; gap: 6px; padding: 8px 10px 0; font-size: 10px; }
+.mini-value { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.mini-wpm { font-family: var(--font-display); font-weight: 500; font-size: 64px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mini[data-tone="ok"] .mini-wpm { color: var(--ok); }
+.mini[data-tone="warn"] .mini-wpm { color: var(--warn); }
+.mini[data-tone="danger"] .mini-wpm { color: var(--danger); }
+.mini-unit { font-size: 11px; color: var(--text-muted); }
+.mini-bar { height: 10px; flex: none; background: var(--ink-300); }
+.mini[data-tone="ok"] .mini-bar { background: var(--ok); }
+.mini[data-tone="warn"] .mini-bar { background: var(--warn); }
+.mini[data-tone="danger"] .mini-bar { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 274 266" aria-hidden="true">
+        <g fill="currentColor">
+          <path d="M81,0 H193 V17 H81 Z"/>
+          <path fill-rule="evenodd" d="M61,21 H213 V266 H61 Z M92,97 A45,45 0 0 1 182,97 V199 A45,45 0 0 1 92,199 Z"/>
+          <path d="M39,62 L56,50 V266 H39 Z"/>
+          <path transform="translate(274,0) scale(-1,1)" d="M39,62 L56,50 V266 H39 Z"/>
+          <path d="M17,106 L34,94 V266 H17 Z"/>
+          <path transform="translate(274,0) scale(-1,1)" d="M17,106 L34,94 V266 H17 Z"/>
+          <path d="M0,257 H56 V266 H0 Z"/>
+          <path transform="translate(274,0) scale(-1,1)" d="M0,257 H56 V266 H0 Z"/>
+        </g>
+      </svg>
+      <span class="brand-name caps">Nullthrone</span>
+    </div>
+    <p class="eyebrow caps">Word Pace · Live</p>
+  </header>
+  <div class="double-rule" aria-hidden="true"></div>
+
+  <div id="notice" class="notice" role="alert" hidden><strong id="notice-title" class="notice-title caps"></strong><span id="notice-text"></span></div>
+
+  <main>
+    <section class="card" aria-labelledby="readout-title">
+      <div class="card-head">
+        <h1 id="readout-title" class="eyebrow caps">Sprechtempo</h1>
+        <span id="pause-badge" class="badge badge-warn caps" hidden>Pause</span>
+      </div>
+      <div id="readout" class="readout" data-tone="idle">
+        <div class="readout-value"><span id="wpm" class="wpm">–</span><span class="wpm-unit caps">WPM</span></div>
+        <p id="zone-label" class="zone-label caps" aria-live="polite">Bereit</p>
+      </div>
+      <div class="gauge" aria-hidden="true">
+        <div class="gauge-track">
+          <div id="band-slow" class="band band-danger"></div>
+          <div id="band-edge-slow" class="band band-warn"></div>
+          <div id="band-ok" class="band band-ok"></div>
+          <div id="band-edge-fast" class="band band-warn"></div>
+          <div id="band-fast" class="band band-danger"></div>
+          <div id="gauge-marker" class="gauge-marker" hidden></div>
+        </div>
+        <div id="gauge-scale" class="gauge-scale"></div>
+      </div>
+      <p class="status"><span id="status-dot" class="dot"></span><span id="status-text">Bereit. Start fragt nach der Mikrofonfreigabe.</span></p>
+      <div class="actions">
+        <button id="start" class="btn btn-primary btn-lg caps" type="button">Start</button>
+        <button id="popout" class="btn btn-outline btn-lg caps" type="button">Pop-out</button>
+      </div>
+    </section>
+
+    <section id="stats" class="card" aria-labelledby="stats-title" hidden>
+      <p class="eyebrow caps">Letzte Sitzung</p>
+      <h2 id="stats-title" class="card-title">Auswertung</h2>
+      <dl class="stats-grid">
+        <div><dt class="caps">Dauer</dt><dd id="st-duration">–</dd></div>
+        <div><dt class="caps">Spitze</dt><dd id="st-peak">–</dd></div>
+        <div><dt class="caps">Ø Sprechzeit</dt><dd id="st-avg">–</dd></div>
+        <div><dt class="caps">Ø Gesamtdauer</dt><dd id="st-avg-total">–</dd></div>
+      </dl>
+      <div class="split" aria-hidden="true">
+        <span id="split-ok" class="tone-ok"></span><span id="split-warn" class="tone-warn"></span><span id="split-danger" class="tone-danger"></span>
+      </div>
+      <ul class="legend">
+        <li><span class="dot tone-ok"></span><span id="lg-ok">Im Korridor –</span></li>
+        <li><span class="dot tone-warn"></span><span id="lg-warn">Grenzbereich –</span></li>
+        <li><span class="dot tone-danger"></span><span id="lg-danger">Außerhalb –</span></li>
+      </ul>
+    </section>
+
+    <section class="card" aria-labelledby="settings-title">
+      <h2 id="settings-title" class="card-title">Einstellungen</h2>
+      <div class="field-grid">
+        <label class="field"><span class="field-label caps">Korridor min · WPM</span><input id="set-min" class="input" type="number" inputmode="numeric" min="60" max="250" step="5"></label>
+        <label class="field"><span class="field-label caps">Korridor max · WPM</span><input id="set-max" class="input" type="number" inputmode="numeric" min="70" max="300" step="5"></label>
+        <label class="field"><span class="field-label caps">Fenster · s</span><input id="set-w" class="input" type="number" inputmode="numeric" min="10" max="30" step="1"></label>
+        <label class="field"><span class="field-label caps">Pausenschwelle · s</span><input id="set-p" class="input" type="number" inputmode="decimal" min="0.8" max="3" step="0.1"></label>
+        <label class="field field-wide"><span class="field-label caps">Sprache</span>
+          <span class="select-wrap"><select id="set-lang" class="input">
+            <option value="de-DE">Deutsch (de-DE)</option>
+            <option value="en-US">English (en-US)</option>
+          </select></span>
+        </label>
+      </div>
+      <div class="switches">
+        <button id="set-pauses" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span>Pausen einrechnen</span></button>
+        <button id="set-beep" class="switch" type="button" role="switch" aria-checked="false"><span class="switch-track"><span class="switch-thumb"></span></span><span>Signalton nach 5 s im roten Bereich</span></button>
+      </div>
+      <p class="hint">Die Einstellungen stehen in der Adresszeile hinter #. Als Lesezeichen sichern; das Gerät speichert nichts.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Die Seite speichert weder Audio noch Transkript noch Wortlisten. Die Spracherkennung läuft über den Dienst des Browsers (Chrome: Google, Safari: Apple); was du sagst, verlässt damit dein Gerät. Vertrauliches übst du besser mit neutralem Text.</p>
+    <p class="footer-meta caps">Nullthrone · Open Source · MIT</p>
+  </footer>
+</div>
+
+<script id="wpt-core">
+// Pure counting, window and settings logic. No DOM access: tests load this block on its own.
+(function (root) {
+  'use strict';
+
+  var DEFAULTS = { min: 130, max: 150, windowSec: 15, pauseSec: 1.5, lang: 'de-DE', includePauses: false, beep: false };
+  var LANGS = ['de-DE', 'en-US'];
+  var SCALE = { from: 80, to: 220 };
+  var MARGIN = 10;            // width of each yellow band in WPM
+  var MIN_SPEECH_MS = 4000;   // below this much speech in the window the value is not updated
+  var EMA_ALPHA = 0.3;
+  var ALARM_MS = 5000;
+
+  function countWords(text) {
+    var t = String(text == null ? '' : text).trim();
+    return t ? t.split(/\s+/).length : 0;
+  }
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+  function num(value, fallback, lo, hi, decimals) {
+    var n = typeof value === 'number' ? value : parseFloat(value);
+    if (!isFinite(n)) return fallback;
+    var f = Math.pow(10, decimals || 0);
+    return Math.round(clamp(n, lo, hi) * f) / f;
+  }
+
+  function flag(value) { return value === true || value === 1 || value === '1' || value === 'true'; }
+
+  function sanitize(s) {
+    s = s || {};
+    var out = {
+      min: num(s.min, DEFAULTS.min, 60, 250, 0),
+      max: num(s.max, DEFAULTS.max, 70, 300, 0),
+      windowSec: num(s.windowSec, DEFAULTS.windowSec, 10, 30, 0),
+      pauseSec: num(s.pauseSec, DEFAULTS.pauseSec, 0.8, 3, 1),
+      lang: LANGS.indexOf(s.lang) >= 0 ? s.lang : DEFAULTS.lang,
+      includePauses: flag(s.includePauses),
+      beep: flag(s.beep)
+    };
+    if (out.max <= out.min) out.max = Math.min(300, out.min + 20);
+    return out;
+  }
+
+  function parseHash(hash) {
+    var p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    function get(k) { return p.has(k) ? p.get(k) : undefined; }
+    return sanitize({
+      min: get('min'), max: get('max'), windowSec: get('w'), pauseSec: get('p'),
+      lang: get('lang'), includePauses: get('pauses'), beep: get('beep')
+    });
+  }
+
+  function serializeHash(s) {
+    s = sanitize(s);
+    return 'min=' + s.min + '&max=' + s.max + '&w=' + s.windowSec + '&p=' + s.pauseSec +
+      '&lang=' + s.lang + '&pauses=' + (s.includePauses ? 1 : 0) + '&beep=' + (s.beep ? 1 : 0);
+  }
+
+  function classify(wpm, min, max) {
+    if (wpm == null) return null;
+    if (wpm < min - MARGIN) return 'slow';
+    if (wpm < min) return 'edge-slow';
+    if (wpm <= max) return 'ok';
+    if (wpm <= max + MARGIN) return 'edge-fast';
+    return 'fast';
+  }
+
+  function toneOf(zone) {
+    if (zone === 'ok') return 'ok';
+    if (zone === 'edge-slow' || zone === 'edge-fast') return 'warn';
+    if (zone === 'slow' || zone === 'fast') return 'danger';
+    return null;
+  }
+
+  function scalePercent(wpm) { return clamp((wpm - SCALE.from) / (SCALE.to - SCALE.from), 0, 1) * 100; }
+
+  // Words per minute over a sliding window, counted over speaking time only.
+  // A gap between word events contributes at most the pause threshold P to the denominator.
+  function PaceTracker(settings, now) {
+    this.configure(settings);
+    this.reset(now || 0);
+  }
+
+  PaceTracker.prototype.configure = function (settings) { this.s = sanitize(settings); };
+
+  PaceTracker.prototype.reset = function (now) {
+    this.startedAt = now;
+    this.events = [];
+    this.anchor = null;       // time of the newest event that has left the window
+    this.lastEventAt = null;
+    this.base = 0;
+    this.ema = null;
+    this.value = null;
+    this.emaAtEvent = null;   // smoothed value at the first tick after the newest word event
+    this.seenEventAt = null;
+    this.lastTickAt = null;
+    this.redSince = null;
+    this.alarmed = false;
+    this.stats = { words: 0, speechMs: 0, peak: null, zoneMs: { ok: 0, warn: 0, danger: 0 } };
+  };
+
+  // The recognition service restarted: its transcript starts empty again.
+  PaceTracker.prototype.resetBase = function () { this.base = 0; };
+
+  // Total word count of the current transcript (final + interim). Only growth counts as new words;
+  // a shrinking total is a correction by the service and only moves the base.
+  PaceTracker.prototype.ingestTotal = function (total, now) {
+    var delta = total - this.base;
+    this.base = total;
+    if (delta > 0) this.addWords(delta, now);
+    return delta > 0 ? delta : 0;
+  };
+
+  PaceTracker.prototype.addWords = function (n, now) {
+    var P = this.s.pauseSec * 1000;
+    var prev = this.lastEventAt == null ? this.startedAt : this.lastEventAt;
+    this.stats.speechMs += Math.min(Math.max(0, now - prev), P);
+    this.stats.words += n;
+    this.events.push({ t: now, n: n });
+    this.lastEventAt = now;
+  };
+
+  PaceTracker.prototype.measure = function (now) {
+    var W = this.s.windowSec * 1000, P = this.s.pauseSec * 1000, from = now - W;
+    while (this.events.length && this.events[0].t <= from) this.anchor = this.events.shift().t;
+    var words = 0, speech = 0;
+    var prev = this.anchor == null ? this.startedAt : this.anchor;
+    for (var i = 0; i < this.events.length; i++) {
+      var e = this.events[i];
+      words += e.n;
+      speech += Math.min(e.t - Math.max(prev, from), P);
+      prev = e.t;
+    }
+    var since = this.lastEventAt == null ? null : now - this.lastEventAt;
+    if (since != null) speech += Math.min(now - Math.max(this.lastEventAt, from), P);
+    if (this.s.includePauses) speech = Math.min(W, now - this.startedAt);
+    return { words: words, speechMs: speech, sinceLastMs: since, paused: since != null && since > P };
+  };
+
+  PaceTracker.prototype.tick = function (now) {
+    var m = this.measure(now);
+    var frozen = m.paused && !this.s.includePauses;
+    if (frozen) {
+      // Until the gap passed P it counted as speech and pulled the value down; undo that drift.
+      if (this.emaAtEvent != null) {
+        this.ema = this.emaAtEvent;
+        this.value = Math.round(this.ema);
+      }
+    } else if (this.lastEventAt != null && m.speechMs >= MIN_SPEECH_MS && (m.words > 0 || this.s.includePauses)) {
+      var raw = m.words / m.speechMs * 60000;
+      this.ema = this.ema == null ? raw : EMA_ALPHA * raw + (1 - EMA_ALPHA) * this.ema;
+      this.value = Math.round(this.ema);
+    }
+    if (!frozen && this.lastEventAt !== this.seenEventAt) {
+      this.seenEventAt = this.lastEventAt;
+      this.emaAtEvent = this.ema;
+    }
+    var zone = classify(this.value, this.s.min, this.s.max);
+    var tone = toneOf(zone);
+    var dt = this.lastTickAt == null ? 0 : Math.max(0, now - this.lastTickAt);
+    this.lastTickAt = now;
+
+    var counting = this.value != null && !frozen;
+    if (counting) {
+      this.stats.zoneMs[tone] += dt;
+      if (this.stats.peak == null || this.value > this.stats.peak) this.stats.peak = this.value;
+    }
+
+    var alarm = false;
+    if (tone !== 'danger') {
+      this.redSince = null;
+      this.alarmed = false;
+    } else if (!counting) {
+      this.redSince = null;   // pauses do not count toward the alarm
+    } else {
+      if (this.redSince == null) this.redSince = now;
+      if (!this.alarmed && now - this.redSince > ALARM_MS) { alarm = true; this.alarmed = true; }
+    }
+
+    return {
+      value: this.value, zone: zone, tone: tone, paused: m.paused, frozen: frozen,
+      words: m.words, speechMs: m.speechMs, sinceLastMs: m.sinceLastMs,
+      hasSpeech: this.lastEventAt != null, alarm: alarm
+    };
+  };
+
+  PaceTracker.prototype.summary = function (now) {
+    var st = this.stats, duration = Math.max(0, now - this.startedAt);
+    return {
+      durationMs: duration,
+      words: st.words,
+      avgSpeech: st.speechMs >= 1000 ? Math.round(st.words / st.speechMs * 60000) : null,
+      avgTotal: duration >= 1000 && st.words > 0 ? Math.round(st.words / duration * 60000) : null,
+      peak: st.peak,
+      zoneMs: { ok: st.zoneMs.ok, warn: st.zoneMs.warn, danger: st.zoneMs.danger }
+    };
+  };
+
+  // ?demo=1: a sawtooth ramp from 100 to 200 WPM over 60 s, as word events.
+  function DemoSource(now) { this.startedAt = now; this.lastAt = now; this.carry = 0; }
+  DemoSource.RAMP_MS = 60000;
+  DemoSource.rateAt = function (elapsed) { return 100 + 100 * ((elapsed % DemoSource.RAMP_MS) / DemoSource.RAMP_MS); };
+  DemoSource.prototype.pull = function (now) {
+    var dt = now - this.lastAt;
+    if (dt <= 0) return 0;
+    this.carry += DemoSource.rateAt(now - this.startedAt) / 60000 * dt;
+    this.lastAt = now;
+    var n = Math.floor(this.carry);
+    this.carry -= n;
+    return n;
+  };
+
+  root.WPTCore = {
+    DEFAULTS: DEFAULTS, SCALE: SCALE, MARGIN: MARGIN, MIN_SPEECH_MS: MIN_SPEECH_MS, ALARM_MS: ALARM_MS,
+    countWords: countWords, sanitize: sanitize, parseHash: parseHash, serializeHash: serializeHash,
+    classify: classify, toneOf: toneOf, scalePercent: scalePercent,
+    PaceTracker: PaceTracker, DemoSource: DemoSource
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var Core = window.WPTCore;
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var isDemo = new URLSearchParams(location.search).get('demo') === '1';
+  var BACKOFF = [250, 1000, 3000];
+  var MAX_FAILURES = 5;
+  var ZONE_LABEL = {
+    ok: 'Im Korridor', 'edge-slow': 'Leicht zu langsam', 'edge-fast': 'Leicht zu schnell',
+    slow: 'Zu langsam', fast: 'Zu schnell'
+  };
+
+  function $(id) { return document.getElementById(id); }
+  var els = {
+    notice: $('notice'), noticeTitle: $('notice-title'), noticeText: $('notice-text'),
+    readout: $('readout'), wpm: $('wpm'), zone: $('zone-label'), pause: $('pause-badge'),
+    marker: $('gauge-marker'), scale: $('gauge-scale'),
+    bands: { slow: $('band-slow'), edgeSlow: $('band-edge-slow'), ok: $('band-ok'), edgeFast: $('band-edge-fast'), fast: $('band-fast') },
+    dot: $('status-dot'), status: $('status-text'), start: $('start'), popout: $('popout'),
+    stats: $('stats'),
+    min: $('set-min'), max: $('set-max'), w: $('set-w'), p: $('set-p'), lang: $('set-lang'),
+    pauses: $('set-pauses'), beep: $('set-beep')
+  };
+
+  var settings = Core.parseHash(location.hash);
+  var tracker = new Core.PaceTracker(settings, performance.now());
+  var session = null;   // { demo, restarts, failures, fatal, nextDelay, listening, restarting, cancelRestart }
+  var rec = null;
+  var mini = null;      // { win, doc, root, wpm, label, dot }
+  var lastSnap = null;
+  var blocked = false;
+
+  // ---- Notices -------------------------------------------------------------
+  function showNotice(title, text, tone) {
+    els.noticeTitle.textContent = title;
+    els.noticeText.textContent = text;
+    els.notice.setAttribute('data-tone', tone || 'neutral');
+    els.notice.hidden = false;
+  }
+  function hideNotice() { els.notice.hidden = true; }
+
+  // ---- Theme ---------------------------------------------------------------
+  var darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  function currentTheme() { return darkQuery && darkQuery.matches ? 'dark' : 'light'; }
+  function applyTheme() {
+    var t = currentTheme();
+    document.documentElement.setAttribute('data-theme', t);
+    if (mini) mini.doc.documentElement.setAttribute('data-theme', t);
+  }
+  if (darkQuery) {
+    if (darkQuery.addEventListener) darkQuery.addEventListener('change', applyTheme);
+    else if (darkQuery.addListener) darkQuery.addListener(applyTheme);
+  }
+
+  // ---- Timers ----------------------------------------------------------------
+  // Background tabs throttle their timers. While the pop-out is open it is the visible window,
+  // so the tick runs on its clock; all arithmetic uses performance.now() timestamps either way.
+  var ticker = { win: null, id: null };
+  function setTicker(win) {
+    if (ticker.win && ticker.id != null) {
+      try { ticker.win.clearInterval(ticker.id); } catch (e) {}
+    }
+    ticker.win = null; ticker.id = null;
+    if (!win || !session) return;
+    ticker.win = win;
+    ticker.id = win.setInterval(onTick, 500);
+  }
+  function later(fn, ms) {
+    var win = ticker.win && !ticker.win.closed ? ticker.win : window;
+    var id = win.setTimeout(fn, ms);
+    return function () { try { win.clearTimeout(id); } catch (e) {} };
+  }
+
+  // ---- Wake lock and tone ------------------------------------------------------
+  var wakeLock = null;
+  function requestWakeLock() {
+    if (!navigator.wakeLock || wakeLock) return;
+    navigator.wakeLock.request('screen').then(function (lock) {
+      if (!session) { lock.release(); return; }
+      wakeLock = lock;
+      lock.addEventListener('release', function () { wakeLock = null; });
+    }, function () {});
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release().catch(function () {}); wakeLock = null; }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (session && document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  var audioCtx = null;
+  function ensureAudio() {
+    if (!settings.beep || audioCtx) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) { try { audioCtx = new AC(); } catch (e) {} }
+  }
+  function beep() {
+    if (!audioCtx) return;
+    var t = audioCtx.currentTime, osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.2);
+  }
+
+  // ---- Speech recognition -------------------------------------------------------
+  function startRecognition() {
+    var s = session;
+    if (!s) return;
+    var r = new SR();
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    r.lang = settings.lang;
+
+    r.onstart = function () {
+      if (session !== s) return;
+      s.listening = true;
+      render(lastSnap);
+    };
+    r.onresult = function (e) {
+      if (session !== s) return;
+      var total = 0;
+      for (var i = 0; i < e.results.length; i++) total += Core.countWords(e.results[i][0].transcript);
+      tracker.ingestTotal(total, performance.now());
+      s.failures = 0;
+      s.nextDelay = BACKOFF[0];
+    };
+    r.onerror = function (e) {
+      if (session !== s) return;
+      switch (e.error) {
+        case 'not-allowed':
+        case 'service-not-allowed':
+          s.fatal = 'Mikrofon oder Spracherkennung ist blockiert. Erlaube den Mikrofonzugriff in den Website-Einstellungen des Browsers und starte erneut.';
+          break;
+        case 'audio-capture':
+          s.fatal = 'Kein Mikrofon verfügbar. Prüfe die Audioeingabe; belegt eine andere App das Mikrofon exklusiv, öffne die Seite auf einem zweiten Gerät.';
+          break;
+        case 'language-not-supported':
+          s.fatal = 'Die Spracherkennung unterstützt ' + settings.lang + ' in diesem Browser nicht.';
+          break;
+        case 'no-speech':
+        case 'aborted':
+          // Silence and our own aborts are not failures: restart at once.
+          s.nextDelay = BACKOFF[0];
+          break;
+        default:
+          s.failures += 1;
+          s.nextDelay = BACKOFF[Math.min(s.failures - 1, BACKOFF.length - 1)];
+          if (s.failures >= MAX_FAILURES) {
+            s.fatal = 'Die Spracherkennung ist ' + MAX_FAILURES + '-mal in Folge fehlgeschlagen (' + e.error + '). Prüfe die Netzwerkverbindung und starte erneut.';
+          }
+      }
+    };
+    r.onend = function () {
+      if (session !== s || rec !== r) return;
+      rec = null;
+      s.listening = false;
+      if (s.fatal) { stop(s.fatal); return; }
+      s.restarts += 1;
+      s.restarting = true;
+      s.cancelRestart = later(function () {
+        if (session !== s) return;
+        s.restarting = false;
+        tracker.resetBase();
+        startRecognition();
+      }, s.nextDelay);
+      render(lastSnap);
+    };
+
+    rec = r;
+    try {
+      r.start();
+    } catch (err) {
+      rec = null;
+      stop('Die Spracherkennung ließ sich nicht starten: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  // ---- Session ------------------------------------------------------------------
+  function start() {
+    var now = performance.now();
+    hideNotice();
+    tracker.configure(settings);
+    tracker.reset(now);
+    session = {
+      demo: isDemo ? new Core.DemoSource(now) : null,
+      restarts: 0, failures: 0, fatal: null, nextDelay: BACKOFF[0],
+      listening: false, restarting: false, cancelRestart: null
+    };
+    ensureAudio();
+    requestWakeLock();
+    els.start.textContent = 'Stop';
+    els.stats.hidden = true;
+    if (!isDemo) startRecognition();
+    if (session) {
+      setTicker(mini ? mini.win : window);
+      onTick();
+    }
+  }
+
+  function stop(message) {
+    if (!session) return;
+    var s = session;
+    session = null;
+    if (s.cancelRestart) s.cancelRestart();
+    if (rec) {
+      var r = rec;
+      rec = null;
+      try { r.abort(); } catch (e) {}
+    }
+    setTicker(null);
+    releaseWakeLock();
+    els.start.textContent = 'Start';
+    showStats(tracker.summary(performance.now()));
+    lastSnap = null;
+    render(null);
+    if (message) showNotice('Sitzung beendet', message, 'danger');
+  }
+
+  function onTick() {
+    if (!session) return;
+    var now = performance.now();
+    if (session.demo) {
+      var n = session.demo.pull(now);
+      if (n > 0) tracker.addWords(n, now);
+    }
+    var snap = tracker.tick(now);
+    if (snap.alarm && settings.beep) beep();
+    lastSnap = snap;
+    render(snap);
+  }
+
+  // ---- Rendering ------------------------------------------------------------------
+  function setText(el, text) { if (el.textContent !== text) el.textContent = text; }
+
+  function statusFor(snap) {
+    if (!session) {
+      if (blocked) return { tone: 'danger', text: 'Start ist deaktiviert.' };
+      return { tone: null, text: isDemo ? 'Bereit. Demo-Modus ohne Mikrofon.' : 'Bereit. Start fragt nach der Mikrofonfreigabe.' };
+    }
+    var suffix = session.restarts ? ' · Neustarts: ' + session.restarts : '';
+    if (session.demo) return { tone: snap && snap.paused ? 'warn' : 'ok', text: 'Demo · synthetische Wörter, kein Mikrofon' };
+    if (session.restarting) return { tone: 'warn', text: 'Erkennung startet neu' + suffix };
+    if (!session.listening) return { tone: 'warn', text: 'Mikrofon wird angefragt' + suffix };
+    if (!snap || !snap.hasSpeech) return { tone: 'warn', text: 'Mikrofon aktiv · warte auf Sprache' + suffix };
+    if (snap.paused) return { tone: 'warn', text: 'Mikrofon aktiv · Pause' + suffix };
+    return { tone: 'ok', text: 'Mikrofon aktiv · Sprache erkannt' + suffix };
+  }
+
+  function labelFor(snap, short) {
+    if (!session) return 'Bereit';
+    if (!snap || snap.value == null) return snap && snap.hasSpeech ? 'Messe' : 'Warte auf Sprache';
+    if (short && snap.paused) return 'Pause';
+    return ZONE_LABEL[snap.zone];
+  }
+
+  function render(snap) {
+    var tone = snap && snap.tone ? snap.tone : 'idle';
+    var value = snap && snap.value != null ? String(snap.value) : (session ? '…' : '–');
+    var status = statusFor(snap);
+
+    els.readout.setAttribute('data-tone', tone);
+    setText(els.wpm, value);
+    setText(els.zone, labelFor(snap, false));
+    els.pause.hidden = !(session && snap && snap.paused);
+    if (snap && snap.value != null) {
+      els.marker.hidden = false;
+      els.marker.style.left = Core.scalePercent(snap.value) + '%';
+    } else {
+      els.marker.hidden = true;
+    }
+    if (status.tone) els.dot.setAttribute('data-tone', status.tone); else els.dot.removeAttribute('data-tone');
+    setText(els.status, status.text);
+
+    if (mini) {
+      mini.root.setAttribute('data-tone', tone);
+      setText(mini.wpm, value);
+      setText(mini.label, labelFor(snap, true));
+      if (status.tone) mini.dot.setAttribute('data-tone', status.tone); else mini.dot.removeAttribute('data-tone');
+    }
+  }
+
+  function renderGauge() {
+    var min = settings.min, max = settings.max, m = Core.MARGIN;
+    function place(el, a, b) {
+      var l = Core.scalePercent(a), r = Core.scalePercent(b);
+      el.style.left = l + '%';
+      el.style.width = Math.max(0, r - l) + '%';
+    }
+    place(els.bands.slow, Core.SCALE.from, min - m);
+    place(els.bands.edgeSlow, min - m, min);
+    place(els.bands.ok, min, max);
+    place(els.bands.edgeFast, max, max + m);
+    place(els.bands.fast, max + m, Core.SCALE.to);
+
+    els.scale.textContent = '';
+    [Core.SCALE.from, min, max, Core.SCALE.to].forEach(function (v) {
+      var span = document.createElement('span');
+      span.textContent = String(v);
+      span.style.left = Core.scalePercent(v) + '%';
+      els.scale.appendChild(span);
+    });
+  }
+
+  function formatDuration(ms) {
+    var s = Math.round(ms / 1000), m = Math.floor(s / 60);
+    return m + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function showStats(sum) {
+    if (sum.durationMs < 1000) return;
+    $('st-duration').textContent = formatDuration(sum.durationMs);
+    $('st-peak').textContent = sum.peak == null ? '–' : sum.peak + ' WPM';
+    $('st-avg').textContent = sum.avgSpeech == null ? '–' : sum.avgSpeech + ' WPM';
+    $('st-avg-total').textContent = sum.avgTotal == null ? '–' : sum.avgTotal + ' WPM';
+    var z = sum.zoneMs, total = z.ok + z.warn + z.danger;
+    function pct(v) { return total ? Math.round(v / total * 100) : 0; }
+    $('split-ok').style.width = pct(z.ok) + '%';
+    $('split-warn').style.width = pct(z.warn) + '%';
+    $('split-danger').style.width = pct(z.danger) + '%';
+    $('lg-ok').textContent = 'Im Korridor ' + (total ? pct(z.ok) + ' %' : '–');
+    $('lg-warn').textContent = 'Grenzbereich ' + (total ? pct(z.warn) + ' %' : '–');
+    $('lg-danger').textContent = 'Außerhalb ' + (total ? pct(z.danger) + ' %' : '–');
+    els.stats.hidden = false;
+  }
+
+  // ---- Settings ---------------------------------------------------------------------
+  function writeForm() {
+    els.min.value = settings.min;
+    els.max.value = settings.max;
+    els.w.value = settings.windowSec;
+    els.p.value = settings.pauseSec;
+    els.lang.value = settings.lang;
+    els.pauses.setAttribute('aria-checked', String(settings.includePauses));
+    els.beep.setAttribute('aria-checked', String(settings.beep));
+  }
+
+  function readForm() {
+    return {
+      min: els.min.value, max: els.max.value, windowSec: els.w.value, pauseSec: els.p.value,
+      lang: els.lang.value,
+      includePauses: els.pauses.getAttribute('aria-checked') === 'true',
+      beep: els.beep.getAttribute('aria-checked') === 'true'
+    };
+  }
+
+  function applySettings(next) {
+    var prevLang = settings.lang;
+    settings = Core.sanitize(next);
+    tracker.configure(settings);
+    writeForm();
+    renderGauge();
+    var hash = '#' + Core.serializeHash(settings);
+    if (location.hash !== hash) {
+      try { history.replaceState(null, '', location.pathname + location.search + hash); } catch (e) {}
+    }
+    // A new language needs a new recognition run; onend restarts it with the current setting.
+    if (session && rec && prevLang !== settings.lang) {
+      try { rec.abort(); } catch (e) {}
+    }
+    if (session) onTick();
+  }
+
+  [els.min, els.max, els.w, els.p, els.lang].forEach(function (el) {
+    el.addEventListener('change', function () { applySettings(readForm()); });
+  });
+  [els.pauses, els.beep].forEach(function (el) {
+    el.addEventListener('click', function () {
+      el.setAttribute('aria-checked', String(el.getAttribute('aria-checked') !== 'true'));
+      applySettings(readForm());
+      if (settings.beep) ensureAudio();
+    });
+  });
+  window.addEventListener('hashchange', function () { applySettings(Core.parseHash(location.hash)); });
+
+  // ---- Pop-out -------------------------------------------------------------------------
+  var MINI_HTML =
+    '<div class="mini" data-tone="idle">' +
+      '<div class="mini-top caps"><span class="dot"></span><span class="mini-label">Bereit</span></div>' +
+      '<div class="mini-value"><span class="mini-wpm">–</span><span class="mini-unit caps">WPM</span></div>' +
+      '<div class="mini-bar"></div>' +
+    '</div>';
+
+  function attachMini(win) {
+    var doc = win.document;
+    doc.title = 'Word Pace';
+    doc.documentElement.setAttribute('data-theme', currentTheme());
+    doc.documentElement.setAttribute('lang', 'de');
+    doc.head.textContent = '';
+    var meta = doc.createElement('meta');
+    meta.setAttribute('charset', 'utf-8');
+    doc.head.appendChild(meta);
+    Array.prototype.forEach.call(document.querySelectorAll('style'), function (style) {
+      var copy = doc.createElement('style');
+      copy.textContent = style.textContent;
+      doc.head.appendChild(copy);
+    });
+    doc.body.className = 'mini-body';
+    doc.body.innerHTML = MINI_HTML;
+    mini = {
+      win: win, doc: doc,
+      root: doc.querySelector('.mini'), wpm: doc.querySelector('.mini-wpm'),
+      label: doc.querySelector('.mini-label'), dot: doc.querySelector('.dot')
+    };
+    win.addEventListener('pagehide', function () {
+      if (!mini || mini.win !== win) return;
+      mini = null;
+      els.popout.textContent = 'Pop-out';
+      if (session) setTicker(window);
+    });
+    els.popout.textContent = 'Pop-out schließen';
+    if (session) setTicker(win);
+    render(lastSnap);
+  }
+
+  function openMini() {
+    if ('documentPictureInPicture' in window) {
+      // Chrome, Edge: always-on-top window.
+      window.documentPictureInPicture.requestWindow({ width: 240, height: 140 }).then(attachMini, function (err) {
+        showNotice('Pop-out', 'Das Picture-in-Picture-Fenster ließ sich nicht öffnen: ' + (err && err.message ? err.message : err), 'warn');
+      });
+      return;
+    }
+    // Safari, Firefox: a small popup, not always on top.
+    var win = window.open('', 'wpt-mini', 'popup,width=240,height=140');
+    if (!win) {
+      showNotice('Pop-out', 'Der Browser hat das Popup blockiert. Erlaube Popups für diese Seite und klicke erneut.', 'warn');
+      return;
+    }
+    attachMini(win);
+  }
+
+  els.popout.addEventListener('click', function () {
+    if (mini) { mini.win.close(); return; }
+    openMini();
+  });
+  window.addEventListener('pagehide', function () {
+    if (mini && !mini.win.closed) mini.win.close();
+  });
+
+  // ---- Start ----------------------------------------------------------------------------
+  els.start.addEventListener('click', function () {
+    if (session) stop(); else start();
+  });
+
+  writeForm();
+  renderGauge();
+  applyTheme();
+  if (!location.hash) {
+    try { history.replaceState(null, '', location.pathname + location.search + '#' + Core.serializeHash(settings)); } catch (e) {}
+  }
+
+  if (isDemo) {
+    showNotice('Demo-Modus', 'Synthetische Rampe von 100 bis 200 WPM über 60 s. Kein Mikrofon, keine Spracherkennung.', 'neutral');
+  } else if (!SR) {
+    blocked = true;
+    showNotice('Nicht unterstützt', 'Dieser Browser bietet keine Spracherkennung (Web Speech API). Öffne die Seite in Chrome oder Safari.', 'danger');
+  } else if (!window.isSecureContext) {
+    blocked = true;
+    showNotice('Mikrofon blockiert', 'Die Seite ist nicht über HTTPS oder localhost geladen. Der Browser gibt das Mikrofon nur in sicheren Umgebungen frei.', 'danger');
+  }
+  els.start.disabled = blocked;
+  render(null);
+})();
+</script>
+</body>
+</html>
