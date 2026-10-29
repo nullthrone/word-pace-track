@@ -1,13 +1,14 @@
 // Plays each bench clip into a virtual microphone, records what Google Chrome's speech recognition
 // emits and writes it with the clip's truth to tests/speech/<id>.json for replay in `npm test`.
 //
-// Usage: node bench/record.mjs [--only id,id] [--cache bench/.cache]
+// Usage: node bench/record.mjs [--only id,id] [--cache bench/.cache] [--truth-only]
+// --truth-only copies changed truth files into the recorded fixtures without recording again.
 // Needs Google Chrome (CHROME=/path/to/chrome; Chromium has no access to Google's speech service),
 // PulseAudio with pactl and paplay, and the clips from bench/build_audio.py. See bench/README.md.
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { execFileSync, spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
@@ -37,6 +38,21 @@ function setupPulse() {
   execFileSync('pactl', ['set-default-source', `${SINK}_mic`]);
 }
 
+const ids = readdirSync(cache).filter((f) => f.endsWith('.truth.json')).map((f) => f.slice(0, -11))
+  .filter((id) => !only.size || only.has(id)).sort();
+const readTruth = (id) => JSON.parse(readFileSync(join(cache, id + '.truth.json'), 'utf8'));
+
+if (args.includes('--truth-only')) {
+  for (const id of ids) {
+    const file = join(out, id + '.json');
+    if (!existsSync(file)) continue;
+    const { recorder, audioOffsetMs, events } = JSON.parse(readFileSync(file, 'utf8'));
+    writeFileSync(file, JSON.stringify({ ...readTruth(id), recorder, audioOffsetMs, events }) + '\n');
+    console.log(`${id}: truth updated`);
+  }
+  process.exit(0);
+}
+
 const page = readFileSync(join(here, 'capture.html'));
 const server = createServer((req, res) => { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(page); });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -44,11 +60,9 @@ const url = `http://127.0.0.1:${server.address().port}/`;
 
 setupPulse();
 const browser = await chromium.launch({ executablePath: chrome, args: ['--use-fake-ui-for-media-stream'] });
-const ids = readdirSync(cache).filter((f) => f.endsWith('.truth.json')).map((f) => f.slice(0, -11))
-  .filter((id) => !only.size || only.has(id)).sort();
 try {
   for (const id of ids) {
-    const truth = JSON.parse(readFileSync(join(cache, id + '.truth.json'), 'utf8'));
+    const truth = readTruth(id);
     const context = await browser.newContext({ permissions: ['microphone'] });
     const tab = await context.newPage();
     await tab.goto(url);

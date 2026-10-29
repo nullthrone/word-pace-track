@@ -1,8 +1,17 @@
-// Prints the speech bench results per clip. Usage: node bench/report.mjs [--csv]
+// Prints the speech bench results per clip.
+// Usage: node bench/report.mjs [--csv] [--set pauseSec=3 --set windowSec=20 ...]
+// --set overrides tracker settings, to try a change against real speech before making it.
 import { loadCore, loadFixtures, replay } from './replay.mjs';
 
 const Core = loadCore();
-const rows = loadFixtures().map((fx) => replay(Core, fx));
+const args = process.argv.slice(2);
+const overrides = {};
+args.forEach((a, i) => {
+  if (a !== '--set') return;
+  const [k, v] = args[i + 1].split('=');
+  overrides[k] = v === 'true' ? true : v === 'false' ? false : Number(v);
+});
+const rows = loadFixtures().map((fx) => replay(Core, fx, overrides));
 const pct = (v) => v == null ? '–' : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)} %`;
 const share = (v) => v == null ? '–' : `${Math.round(v * 100)} %`;
 const cols = [
@@ -23,7 +32,7 @@ const cols = [
   ['shown red', (r) => share(r.redShare)]
 ];
 const table = rows.map((r) => cols.map(([, f]) => String(f(r))));
-if (process.argv.includes('--csv')) {
+if (args.includes('--csv')) {
   console.log(cols.map(([h]) => h).join(','));
   for (const row of table) console.log(row.join(','));
 } else {

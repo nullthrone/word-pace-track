@@ -46,12 +46,39 @@ def voiced_span(x):
     return int(on[0]) * FRAME, int(on[-1] + 1) * FRAME
 
 
+def voiced_intervals(x, offset):
+    """Voiced stretches of x as [[startMs, endMs], ...] on the clip clock: frames above the midpoint
+    between noise floor and loud speech (10th and 99th percentile of the level), gaps under 300 ms
+    bridged. Words are spread over these, so pauses inside a segment stay pauses."""
+    n = len(x) // FRAME
+    if n == 0:
+        return []
+    rms = np.sqrt(np.mean(x[:n * FRAME].reshape(n, FRAME) ** 2, axis=1)) + 1e-9
+    db = 20 * np.log10(rms)
+    real = db[db > -120]  # leaves out digital silence
+    if len(real) == 0:
+        return []
+    on = db > (np.percentile(real, 10) + np.percentile(real, 99)) / 2
+    spans, start, last = [], None, None
+    for i in np.nonzero(on)[0]:
+        if start is None:
+            start = i
+        elif i - last > 15:  # 300 ms
+            spans.append((start, last + 1))
+            start = i
+        last = i
+    if start is not None:
+        spans.append((start, last + 1))
+    return [[round((offset + a * FRAME) / RATE * 1000), round((offset + b * FRAME) / RATE * 1000)] for a, b in spans]
+
+
 def assemble(clip_id, parts, gaps, out, meta):
     """parts: [(audio, text, paragraph_end)]. Writes the WAV and the truth file."""
     pieces, segments, pos = [np.zeros(int(LEAD_S * RATE), np.float32)], [], int(LEAD_S * RATE)
     for k, (audio, text, para) in enumerate(parts):
         a, b = voiced_span(audio)
-        segments.append({'startMs': round((pos + a) / RATE * 1000), 'endMs': round((pos + b) / RATE * 1000), 'text': text})
+        segments.append({'startMs': round((pos + a) / RATE * 1000), 'endMs': round((pos + b) / RATE * 1000), 'text': text,
+                         'voiced': voiced_intervals(audio[a:b], pos + a)})
         pieces.append(audio)
         pos += len(audio)
         if k < len(parts) - 1:
@@ -133,12 +160,33 @@ def build_tts(cfg, gaps, out, only):
         assemble(c['id'], parts, gaps, out, meta)
 
 
+def retruth(out, only):
+    """Recompute the voiced intervals of existing clips without rebuilding the audio."""
+    for name in sorted(os.listdir(out)):
+        if not name.endswith('.truth.json') or (only and name[:-11] not in only):
+            continue
+        path = os.path.join(out, name)
+        with open(path, encoding='utf-8') as f:
+            truth = json.load(f)
+        with open(os.path.join(out, name[:-11] + '.wav'), 'rb') as f:
+            x = decode(f.read())
+        for seg in truth['segments']:
+            a, b = seg['startMs'] * RATE // 1000, seg['endMs'] * RATE // 1000
+            seg['voiced'] = voiced_intervals(x[a:b], a)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(truth, f, ensure_ascii=False, indent=1)
+        print(name[:-11], 'voiced intervals updated')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(HERE, '.cache'))
     ap.add_argument('--only', default='', help='comma-separated clip ids')
+    ap.add_argument('--truth-only', action='store_true', help='only recompute voiced intervals of built clips')
     args = ap.parse_args()
     only = set(filter(None, args.only.split(',')))
+    if args.truth_only:
+        return retruth(args.out, only)
     os.makedirs(os.path.join(args.out, 'dl'), exist_ok=True)
     with open(os.path.join(HERE, 'corpus.json'), encoding='utf-8') as f:
         corpus = json.load(f)

@@ -21,14 +21,20 @@ export function loadFixtures() {
     .map((f) => JSON.parse(readFileSync(new URL(f, dir), 'utf8')));
 }
 
-// Truth as word events: each segment's words spread evenly over its voiced span, on the
-// recognition clock (the audio started audioOffsetMs after recognition did).
+// Truth as word events: each segment's words spread evenly over its voiced intervals (pauses
+// inside the segment stay pauses), on the recognition clock: the audio started audioOffsetMs
+// after recognition did.
 function truthEvents(Core, fx) {
   const events = [];
   for (const seg of fx.segments) {
     const n = Core.countWords(seg.text, fx.lang);
-    const step = (seg.endMs - seg.startMs) / n;
-    for (let k = 0; k < n; k++) events.push(fx.audioOffsetMs + seg.startMs + (k + 0.5) * step);
+    const voiced = seg.voiced && seg.voiced.length ? seg.voiced : [[seg.startMs, seg.endMs]];
+    const total = voiced.reduce((a, [s, e]) => a + e - s, 0);
+    for (let k = 0; k < n; k++) {
+      let at = (k + 0.5) * total / n, i = 0;
+      while (at > voiced[i][1] - voiced[i][0]) at -= voiced[i][1] - voiced[i++][0];
+      events.push(fx.audioOffsetMs + voiced[i][0] + at);
+    }
   }
   return events;
 }
