@@ -75,6 +75,7 @@ export function replay(Core, fx, settings) {
   const same = speaking.filter((k) => k.app.tone === k.ideal.tone).length;
   const falseRed = speaking.filter((k) => k.app.tone === 'danger' && k.ideal.tone !== 'danger').length;
   const red = speaking.filter((k) => k.app.tone === 'danger').length;
+  const idealRed = speaking.filter((k) => k.ideal.tone === 'danger').length;
 
   const words = truth.length;
   const spanMs = fx.segments.at(-1).endMs - fx.segments[0].startMs;
@@ -97,6 +98,7 @@ export function replay(Core, fx, settings) {
     // What the speaker sees: zone of the true pace by the norms' definition, and time shown in red.
     truthZone: Core.classify(Math.round(words / spanMs * 60000), s.min, s.max),
     redShare: speaking.length ? red / speaking.length : null,
+    redExcess: speaking.length ? (red - idealRed) / speaking.length : null, // red the input alone does not explain
     series: ticks
   };
 }

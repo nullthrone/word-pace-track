@@ -740,13 +740,16 @@ body {
   // The recognition service restarted: its transcript starts empty again.
   PaceTracker.prototype.resetBase = function () { this.base = 0; };
 
-  // Total word count of the current transcript (final + interim). Only growth counts as new words;
-  // a shrinking total is a correction by the service and only moves the base.
+  // Total word count of the current transcript (final + interim). Only growth past the highest
+  // total so far counts as new words: the service often withdraws the unstable end of an interim
+  // result and sends it again, and counting that regrowth inflated real speech by up to 11 %
+  // (bench/README.md).
   PaceTracker.prototype.ingestTotal = function (total, now) {
     var delta = total - this.base;
+    if (delta <= 0) return 0;
     this.base = total;
-    if (delta > 0) this.addWords(delta, now);
-    return delta > 0 ? delta : 0;
+    this.addWords(delta, now);
+    return delta;
   };
 
   PaceTracker.prototype.addWords = function (n, now) {

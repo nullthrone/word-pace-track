@@ -75,7 +75,7 @@ Good to know:
 - While a pause is still inside the window, up to *P* of it counts as speech, so the value can read up to ~10 % low until the pause leaves the window.
 - Tools that divide by the *total* duration, pauses included, report a lower number than speaking-time WPM. Switch on **Count pauses** to compare, or read both averages in the session summary.
 - Words are counted with `Intl.Segmenter`, so languages written without spaces (Chinese) count dictionary words, not characters.
-- Recognition delivers words in bursts with some latency. Accuracy target: within 15 % of a stopwatch count.
+- Recognition delivers words in bursts with some latency. Accuracy target: within 15 % of a stopwatch count. The [speech bench](bench/README.md) checks this against real German speech in every CI run.
 
 ## 🌍 Languages and recommended pace
 
@@ -106,7 +106,7 @@ Caveats, honestly stated:
 
 - The corridors are a synthesis of the cited measurements, not an official standard.
 - The language factors come from read-aloud studies. For spontaneous speech only Chinese has a cross-check, and it agrees.
-- Published rates mostly divide by total time. Word Pace excludes only pauses longer than *P*, so it reads close to those figures for fluent speech and somewhat higher with many long pauses.
+- Published rates mostly divide by total time. Word Pace excludes only pauses longer than *P*, so it reads close to those figures for fluent speech and higher with many long pauses: about 5 % on parliament speeches, 17 % on a talk with 3 s pauses between paragraphs ([speech bench](bench/README.md#-findings-chrome-156-de-de-october-2026)).
 - Hindi needs better data. If you know a study, please open an issue.
 
 <div align="center">
@@ -152,7 +152,8 @@ Examples: `…/word-pace-track/#ui=de&lang=en-US&sc=teaching` (German interface,
 Everything is in [`index.html`](index.html): inline CSS (Nullthrone design tokens) and two scripts. The pure counting and window logic sits in `<script id="wpt-core">` without DOM access, so the tests load it on its own.
 
 ```bash
-npm test                 # unit tests (node:test, no dependencies)
+npm test                 # unit tests and the speech bench gate (node:test, no dependencies)
+npm run bench            # speech bench results per clip
 npm run test:browser     # demo mode in headless Chromium (needs playwright)
 ```
 

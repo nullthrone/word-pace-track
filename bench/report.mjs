@@ -29,7 +29,8 @@ const cols = [
   ['zone match', (r) => share(r.zoneAgreement)],
   ['false red', (r) => share(r.falseRed)],
   ['true zone', (r) => r.truthZone],
-  ['shown red', (r) => share(r.redShare)]
+  ['shown red', (r) => share(r.redShare)],
+  ['red excess', (r) => pct(r.redExcess)]
 ];
 const table = rows.map((r) => cols.map(([, f]) => String(f(r))));
 if (args.includes('--csv')) {
