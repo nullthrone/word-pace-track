@@ -1,0 +1,11 @@
+Guten Morgen und vielen Dank, dass Sie sich heute die Zeit nehmen. In den nächsten Minuten möchte ich Ihnen zeigen, wie wir unsere Netzwerksicherheit für die kommenden Jahre aufstellen wollen.
+
+Beginnen wir mit der Ausgangslage. Die meisten unserer Mitarbeiterinnen und Mitarbeiter arbeiten inzwischen zumindest teilweise von zu Hause. Die Anwendungen liegen nicht mehr im eigenen Rechenzentrum, sondern bei verschiedenen Cloudanbietern. Das klassische Sicherheitsmodell mit einer festen Grenze zwischen innen und außen passt deshalb nicht mehr zu unserer Realität.
+
+Was bedeutet das konkret? Jeder Zugriff wird künftig einzeln geprüft, unabhängig davon, von wo er kommt. Wir betrachten dabei die Identität der Person, den Zustand des Geräts und die Empfindlichkeit der Daten. Erst wenn alle drei Faktoren passen, wird der Zugriff freigegeben.
+
+Natürlich wirft das Fragen auf. Wird die Arbeit dadurch langsamer? Nach unseren ersten Pilotprojekten lautet die Antwort eindeutig nein. Die Anmeldung erfolgt einmal am Tag, danach laufen die Prüfungen im Hintergrund. Gleichzeitig sinkt der Aufwand für unsere Betriebsteams, weil viele Ausnahmeregeln wegfallen.
+
+Zum Abschluss noch ein Wort zur Umsetzung. Wir gehen schrittweise vor und beginnen mit den Abteilungen, die besonders viele externe Anwendungen nutzen. Jede Phase wird gemeinsam mit den Fachbereichen geplant und erst nach einer gründlichen Auswertung erweitert.
+
+Ich freue mich jetzt auf Ihre Fragen und auf eine offene Diskussion.

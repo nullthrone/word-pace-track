@@ -44,15 +44,16 @@ test('countWords segments languages without spaces', () => {
   assert.equal(Core.countWords('Quiero presentaros hoy nuestro nuevo producto.', 'es-ES'), 6);
 });
 
-test('ingestTotal counts growth only and survives corrections and restarts', () => {
+test('ingestTotal counts growth past the highest total and survives corrections and restarts', () => {
   const tr = new Core.PaceTracker(base, 0);
   assert.equal(tr.ingestTotal(3, 100), 3);
   assert.equal(tr.ingestTotal(5, 200), 2);
   assert.equal(tr.ingestTotal(4, 300), 0, 'correction adds nothing');
-  assert.equal(tr.ingestTotal(6, 400), 2, 'growth counts from the corrected base');
+  assert.equal(tr.ingestTotal(5, 350), 0, 'words withdrawn and sent again are not counted twice');
+  assert.equal(tr.ingestTotal(6, 400), 1, 'only growth past the highest total counts');
   tr.resetBase();
   assert.equal(tr.ingestTotal(2, 500), 2, 'after a restart the transcript starts at 0');
-  assert.equal(tr.stats.words, 9);
+  assert.equal(tr.stats.words, 8);
 });
 
 test('steady speech at 150 WPM reads about 150', () => {

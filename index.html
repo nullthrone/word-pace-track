@@ -618,6 +618,14 @@ body {
     return s.split(/\s+/).length;
   }
 
+  // Words in a recognition result list (final and interim results together), as the app reads
+  // each onresult event. Takes a SpeechRecognitionResultList or a replayed array of the same shape.
+  function transcriptWords(results, locale) {
+    var n = 0;
+    for (var i = 0; i < results.length; i++) n += countWords(results[i][0].transcript, locale);
+    return n;
+  }
+
   function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
   function num(value, fallback, lo, hi, decimals) {
@@ -732,13 +740,16 @@ body {
   // The recognition service restarted: its transcript starts empty again.
   PaceTracker.prototype.resetBase = function () { this.base = 0; };
 
-  // Total word count of the current transcript (final + interim). Only growth counts as new words;
-  // a shrinking total is a correction by the service and only moves the base.
+  // Total word count of the current transcript (final + interim). Only growth past the highest
+  // total so far counts as new words: the service often withdraws the unstable end of an interim
+  // result and sends it again, and counting that regrowth inflated real speech by up to 11 %
+  // (bench/README.md).
   PaceTracker.prototype.ingestTotal = function (total, now) {
     var delta = total - this.base;
+    if (delta <= 0) return 0;
     this.base = total;
-    if (delta > 0) this.addWords(delta, now);
-    return delta > 0 ? delta : 0;
+    this.addWords(delta, now);
+    return delta;
   };
 
   PaceTracker.prototype.addWords = function (n, now) {
@@ -845,7 +856,7 @@ body {
     SCENARIOS: SCENARIOS, SCENARIO_BASE: SCENARIO_BASE, LANG_FACTOR: LANG_FACTOR,
     DEFAULTS: DEFAULTS, MARGIN: MARGIN, MIN_SPEECH_MS: MIN_SPEECH_MS, ALARM_MS: ALARM_MS,
     t: t, isRtl: isRtl, pickUiLang: pickUiLang, speechLangFor: speechLangFor, defaultsFor: defaultsFor,
-    countWords: countWords, sanitize: sanitize, parseHash: parseHash, serializeHash: serializeHash,
+    countWords: countWords, transcriptWords: transcriptWords, sanitize: sanitize, parseHash: parseHash, serializeHash: serializeHash,
     corridorFor: corridorFor, scaleFor: scaleFor,
     classify: classify, toneOf: toneOf, zoneKey: zoneKey, scalePercent: scalePercent,
     PaceTracker: PaceTracker, DemoSource: DemoSource
@@ -1024,9 +1035,7 @@ body {
     };
     r.onresult = function (e) {
       if (session !== s) return;
-      var total = 0;
-      for (var i = 0; i < e.results.length; i++) total += Core.countWords(e.results[i][0].transcript, r.lang);
-      tracker.ingestTotal(total, performance.now());
+      tracker.ingestTotal(Core.transcriptWords(e.results, r.lang), performance.now());
       s.failures = 0;
       s.nextDelay = BACKOFF[0];
     };

@@ -24,13 +24,15 @@ Open `http://localhost:8000/?demo=1` to test the display without a microphone. T
 ## ✅ Tests
 
 ```bash
-npm test                                   # unit tests, no dependencies
+npm test                                   # unit tests and speech bench gate, no dependencies
 npm install --no-save playwright@1.63.0    # once, for the browser test
 npx playwright install chromium            # once
 npm run test:browser                       # demo mode in headless Chromium
 ```
 
 CI runs both on every pull request; `main` deploys to GitHub Pages after they pass.
+
+`npm test` also replays recorded speech recognition traces of real German speech through the counting code (`tests/speech/`). If you change how words are counted or how the window works, run `npm run bench` and compare with the table in [`bench/README.md`](bench/README.md). Recording new traces needs Google Chrome and PulseAudio; the bench README explains how.
 
 ## 🌍 Translations and language norms
 
