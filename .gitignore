@@ -2,3 +2,6 @@ node_modules/
 test-results/
 _site/
 .DS_Store
+bench/.cache/
+bench/.venv/
+__pycache__/

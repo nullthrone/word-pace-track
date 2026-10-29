@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Word Pace speech bench capture</title>
+<!-- Driven by bench/record.mjs. Runs the browser's speech recognition the way index.html does
+     (continuous, interim results, restart 250 ms after each end) and logs every event. -->
+<script>
+(function () {
+  'use strict';
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var t0 = null, rec = null, running = false;
+  var log = [];
+
+  function now() { return Math.round((performance.now() - t0) * 10) / 10; }
+
+  function listen(lang) {
+    var r = new SR();
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    r.lang = lang;
+    r.onstart = function () { log.push({ t: now(), type: 'start' }); };
+    // Only the results from resultIndex on: the earlier ones are unchanged, which keeps traces small.
+    r.onresult = function (e) {
+      var changed = [];
+      for (var i = e.resultIndex; i < e.results.length; i++) changed.push([e.results[i][0].transcript, e.results[i].isFinal]);
+      log.push({ t: now(), type: 'result', i: e.resultIndex, r: changed });
+    };
+    r.onerror = function (e) { log.push({ t: now(), type: 'error', error: e.error }); };
+    r.onend = function () {
+      log.push({ t: now(), type: 'end' });
+      if (running && rec === r) setTimeout(function () { if (running) listen(lang); }, 250);
+    };
+    rec = r;
+    r.start();
+  }
+
+  window.bench = {
+    supported: !!SR,
+    start: function (lang) { t0 = performance.now(); log = []; running = true; listen(lang); },
+    now: now,
+    stop: function () { running = false; if (rec) rec.stop(); },
+    log: function () { return log; }
+  };
+})();
+</script>
+</html>
